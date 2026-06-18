@@ -102,8 +102,29 @@ export default function VolunteerDetailPage() {
               <ArrowLeft size={15} />
             </Link>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div className="avatar" style={{ width: 48, height: 48, fontSize: 20 }}>
-                {volunteer.hoTen.split(" ").pop()?.charAt(0) || "T"}
+              <div style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "2px solid var(--accent)",
+                background: "var(--accent-bg)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                {data.avatarUrl ? (
+                  <img
+                    src={data.avatarUrl}
+                    alt={data.hoTen || ""}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 20, fontWeight: 700, color: "var(--accent)" }}>
+                    {(data.hoTen || "").split(" ").pop()?.charAt(0) || "T"}
+                  </span>
+                )}
               </div>
               <div>
                 <h2 className="page-title">{volunteer.hoTen}</h2>
@@ -240,6 +261,40 @@ export default function VolunteerDetailPage() {
                   <div className="form-group">
                     <label className="form-label">Quốc tịch</label>
                     <input className="form-input" value={data.quocTich || ""} onChange={(e) => set("quocTich", e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Ảnh chân dung</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        id="avatar-upload-input"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              set("avatarUrl", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <label htmlFor="avatar-upload-input" className="btn btn-secondary btn-sm" style={{ cursor: "pointer", margin: 0 }}>
+                        Chọn ảnh...
+                      </label>
+                      {data.avatarUrl && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: "var(--red)", padding: "4px 8px" }}
+                          onClick={() => set("avatarUrl", undefined)}
+                        >
+                          Xóa ảnh
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (

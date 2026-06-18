@@ -130,17 +130,24 @@ export default function DashboardPage() {
                   flexDirection: "column",
                   cursor: "pointer",
                   border: "1px solid var(--border)",
-                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   position: "relative",
                   padding: 0,
                   overflow: "hidden",
+                  height: 350,
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = "0 10px 24px rgba(45, 90, 39, 0.12)";
+                  e.currentTarget.style.transform = "translateY(-6px)";
+                  e.currentTarget.style.boxShadow = "0 12px 28px rgba(45, 90, 39, 0.18)";
                   e.currentTarget.style.borderColor = "var(--accent)";
                   const img = e.currentTarget.querySelector("img");
-                  if (img) img.style.transform = "scale(1.04)";
+                  if (img) img.style.transform = "scale(1.05)";
+                  
+                  const overlay = e.currentTarget.querySelector(".card-overlay") as HTMLDivElement;
+                  if (overlay) {
+                    overlay.style.background = "var(--accent-bg)";
+                    overlay.style.backdropFilter = "blur(16px)";
+                  }
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = "none";
@@ -148,68 +155,116 @@ export default function DashboardPage() {
                   e.currentTarget.style.borderColor = "var(--border)";
                   const img = e.currentTarget.querySelector("img");
                   if (img) img.style.transform = "none";
+                  
+                  const overlay = e.currentTarget.querySelector(".card-overlay") as HTMLDivElement;
+                  if (overlay) {
+                    overlay.style.background = "var(--bg-surface-translucent)";
+                    overlay.style.backdropFilter = "blur(12px)";
+                  }
                 }}
               >
-                {/* Banner Image Container */}
+                {/* Full Bleed Poster / Gradient */}
+                {r.posterUrl ? (
+                  <img
+                    src={r.posterUrl}
+                    alt={r.ten}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      transition: "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: "100%",
+                    height: "100%",
+                    background: "linear-gradient(135deg, #2d5a27 0%, #1c3b18 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: 48,
+                  }}>
+                    🌿
+                  </div>
+                )}
+
+                {/* Floating Status Badge */}
                 <div style={{
-                  position: "relative",
-                  width: "100%",
-                  aspectRatio: "16/9",
-                  background: "linear-gradient(135deg, #2d5a27 0%, #1c3b18 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                  borderBottom: "1px solid var(--border-light)",
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  zIndex: 10,
                 }}>
-                  {r.posterUrl ? (
-                    <img
-                      src={r.posterUrl}
-                      alt={r.ten}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        transition: "transform 0.4s ease",
-                      }}
-                    />
-                  ) : (
-                    <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 40 }}>🌿</div>
-                  )}
+                  <span
+                    className="badge"
+                    style={{
+                      background: statusBg,
+                      color: statusColor,
+                      borderColor: "rgba(255,255,255,0.3)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      backdropFilter: "blur(4px)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    {status}
+                  </span>
                 </div>
 
-                {/* Content Container */}
-                <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
-                    <div>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>{r.ten}</h3>
-                      <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        <MapPin size={12} /> {r.diaDiem}
-                      </p>
-                    </div>
-                    <span
-                      className="badge"
-                      style={{
-                        background: statusBg,
-                        color: statusColor,
-                        borderColor: "transparent",
-                        fontSize: 11,
-                        fontWeight: 600,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {status}
-                    </span>
+                {/* Translucent Overlay Container */}
+                <div
+                  className="card-overlay"
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    padding: "16px 20px",
+                    background: "var(--bg-surface-translucent)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    borderTop: "1.5px solid var(--border-translucent)",
+                    transition: "all 0.3s ease",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    zIndex: 5,
+                  }}
+                >
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", margin: 0, lineHeight: 1.3 }}>
+                      {r.ten}
+                    </h3>
+                    <p style={{
+                      fontSize: 12,
+                      color: "var(--text-secondary)",
+                      marginTop: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      margin: "4px 0 0 0"
+                    }}>
+                      <MapPin size={12} color="var(--accent)" /> {r.diaDiem}
+                    </p>
                   </div>
 
-                  <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-                    <div style={{ color: "var(--text-secondary)" }}>
+                  <div style={{
+                    borderTop: "1px solid rgba(0, 0, 0, 0.06)",
+                    paddingTop: 10,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: 12.5
+                  }}>
+                    <div style={{ color: "var(--text-secondary)", fontWeight: 500 }}>
                       📅 {start.toLocaleDateString("vi-VN")} - {end.toLocaleDateString("vi-VN")}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ fontWeight: 700, color: "var(--accent)", fontSize: 14 }}>{count}</span>
-                      <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>TNV</span>
-                      <ChevronRight size={14} color="var(--text-muted)" />
+                    <div style={{ display: "flex", alignItems: "center", gap: 3, fontWeight: 700, color: "var(--accent)" }}>
+                      <span>{count}</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text-secondary)" }}>TNV</span>
+                      <ChevronRight size={13} color="var(--text-muted)" />
                     </div>
                   </div>
                 </div>
@@ -558,7 +613,13 @@ export default function DashboardPage() {
                         <tr key={v.id}>
                           <td>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div className="avatar">{v.hoTen.split(" ").pop()?.charAt(0) || "T"}</div>
+                              <div className="avatar" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {v.avatarUrl ? (
+                                  <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                ) : (
+                                  v.hoTen.split(" ").pop()?.charAt(0) || "T"
+                                )}
+                              </div>
                               <div>
                                 <Link href={`/tinh-nguyen-vien/${v.id}`} className="volunteer-name" style={{ textDecoration: "none" }}>
                                   {v.hoTen}

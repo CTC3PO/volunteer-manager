@@ -523,9 +523,14 @@ export default function VolunteersPage() {
                           fontSize: 12, fontWeight: 700, flexShrink: 0,
                           border: `1.5px solid ${T.border}`,
                           display: "flex", alignContent: "center", justifyContent: "center",
-                          alignItems: "center"
+                          alignItems: "center",
+                          overflow: "hidden",
                         }}>
-                          {v.hoTen.split(" ").pop()?.charAt(0) || "T"}
+                          {v.avatarUrl ? (
+                            <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            v.hoTen.split(" ").pop()?.charAt(0) || "T"
+                          )}
                         </div>
                         <div>
                           <Link href={`/tinh-nguyen-vien/${v.id}`} style={{

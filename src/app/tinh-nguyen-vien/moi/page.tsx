@@ -91,6 +91,62 @@ export default function NewVolunteerPage() {
                   <input required className="form-input" placeholder="Nguyễn Thị Lan"
                     value={form.hoTen || ""} onChange={(e) => set("hoTen", e.target.value)} />
                 </div>
+                <div className="form-group" style={{ gridColumn: "1/-1" }}>
+                  <label className="form-label">Ảnh chân dung</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
+                    <div style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      border: "2px solid var(--accent)",
+                      background: "var(--accent-bg)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      {form.avatarUrl ? (
+                        <img
+                          src={form.avatarUrl}
+                          alt="Preview"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: 22, fontWeight: 700, color: "var(--accent)" }}>🌿</span>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="new-avatar-upload-input"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            set("avatarUrl", reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <label htmlFor="new-avatar-upload-input" className="btn btn-secondary btn-sm" style={{ cursor: "pointer", margin: 0 }}>
+                      Chọn ảnh...
+                    </label>
+                    {form.avatarUrl && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: "var(--red)", padding: "4px 8px" }}
+                        onClick={() => set("avatarUrl", undefined)}
+                      >
+                        Xóa ảnh
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <div className="form-group">
                   <label className="form-label">Ngày sinh (MM/DD/YYYY)</label>
                   <input className="form-input" placeholder="06/15/1990"
