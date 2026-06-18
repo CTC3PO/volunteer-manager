@@ -513,7 +513,7 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Stats Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 14, marginBottom: 24 }}>
+            <div className="stats-grid" style={{ marginBottom: 24 }}>
               {stats.map((s, i) => (
                 <div key={i} className={`stat-card animate-fade-in animate-delay-${(i % 4) + 1}`}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -525,7 +525,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+            <div className="two-col-grid" style={{ gap: 18 }}>
               {/* Family Breakdown */}
               <div className="card animate-fade-in animate-delay-1">
                 <div className="section-title">🌿 Gia Đình Pháp Đàm</div>

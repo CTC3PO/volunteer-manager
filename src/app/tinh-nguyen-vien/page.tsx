@@ -475,14 +475,14 @@ export default function VolunteersPage() {
       </div>
 
       {/* ── Table ── */}
-      <div style={{ padding: "0 0 16px" }}>
+      <div style={{ padding: "0 16px 16px" }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "56px 20px", color: T.textMut }}>
             <Search size={36} style={{ opacity: 0.3, margin: "0 auto 12px" }} />
             <p style={{ fontWeight: 600 }}>Không tìm thấy TNV nào</p>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div className="table-wrapper" style={{ width: "100%", maxWidth: "100%", display: "block" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 700 }}>
               <thead>
                 <tr style={{ background: T.subtle }}>

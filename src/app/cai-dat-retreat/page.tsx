@@ -313,7 +313,7 @@ function RetreatConfigContent() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div className="two-col-grid" style={{ gap: 20 }}>
             {/* 2. Family Settings */}
             <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
