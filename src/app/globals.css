@@ -552,6 +552,39 @@ input, select, textarea { font-family: inherit; }
 .desktop-only { display: none; }
 @media (min-width: 640px) { .desktop-only { display: table-cell; } }
 
+/* Responsive header container */
+.page-header-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .page-header-flex {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+/* Visibility toggles for mobile vs desktop */
+.mobile-only {
+  display: block;
+}
+.desktop-only-block {
+  display: none;
+}
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+  .desktop-only-block {
+    display: block;
+  }
+}
+
 /* Stack layout for stats grid */
 .stats-grid {
   display: grid;

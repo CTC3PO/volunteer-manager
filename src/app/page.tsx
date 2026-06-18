@@ -430,7 +430,7 @@ export default function DashboardPage() {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: 32 }}>
       {/* Header */}
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 20 }}>
+      <div className="page-header page-header-flex" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {activeRetreat.posterUrl && (
             <div style={{

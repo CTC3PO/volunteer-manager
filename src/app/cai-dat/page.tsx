@@ -156,7 +156,7 @@ export default function CaiDatPage() {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: 40 }}>
       <div className="page-header">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div className="page-header-flex">
           <div>
             <h2 className="page-title">Cài Đặt Hệ Thống</h2>
             <p className="page-subtitle">Quản lý cấu hình chung, email template và kết nối Cloud</p>

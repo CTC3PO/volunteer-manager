@@ -75,7 +75,10 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a18", lineHeight: 1.2 }}>
                 TNV Manager
               </div>
-              <div style={{ fontSize: 11, color: "#9e9a92" }}>
+              <div style={{
+                fontSize: 11, color: "#9e9a92",
+                maxWidth: 140, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"
+              }}>
                 {activeRetreat ? activeRetreat.ten : "Chọn khóa tu để quản lý"}
               </div>
             </div>

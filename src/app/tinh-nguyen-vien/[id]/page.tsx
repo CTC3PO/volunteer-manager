@@ -126,7 +126,7 @@ export default function VolunteerDetailPage() {
     <div className="animate-fade-in" style={{ paddingBottom: 40 }}>
       {/* Header */}
       <div className="page-header">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div className="page-header-flex">
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Link href="/tinh-nguyen-vien" className="btn btn-ghost btn-sm">
               <ArrowLeft size={15} />
@@ -186,7 +186,7 @@ export default function VolunteerDetailPage() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {editing ? (
               <>
                 <button className="btn btn-ghost" onClick={handleCancel}>

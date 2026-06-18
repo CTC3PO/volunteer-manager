@@ -178,7 +178,7 @@ function RetreatConfigContent() {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: 40 }}>
       {/* Header */}
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div className="page-header page-header-flex">
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {!isNew && (
             <Link href="/" className="btn btn-ghost btn-sm">

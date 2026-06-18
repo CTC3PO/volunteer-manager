@@ -388,7 +388,7 @@ export default function VolunteersPage() {
         borderBottom: `1px solid ${T.border}`,
         position: "sticky", top: 0, zIndex: 30,
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div className="page-header-flex">
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>
               Danh sách tình nguyện viên
@@ -398,7 +398,7 @@ export default function VolunteersPage() {
               {selected.size > 0 && ` · Đã chọn ${selected.size}`}
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {selected.size > 0 && (
               <button onClick={handleExport} style={{
                 display: "inline-flex", alignItems: "center", gap: 5,
@@ -474,119 +474,228 @@ export default function VolunteersPage() {
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div style={{ padding: "0 16px 16px" }}>
+      {/* ── Table or Cards ── */}
+      <div style={{ padding: "16px 16px" }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "56px 20px", color: T.textMut }}>
             <Search size={36} style={{ opacity: 0.3, margin: "0 auto 12px" }} />
             <p style={{ fontWeight: 600 }}>Không tìm thấy TNV nào</p>
           </div>
         ) : (
-          <div className="table-wrapper" style={{ width: "100%", maxWidth: "100%", display: "block" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 700 }}>
-              <thead>
-                <tr style={{ background: T.subtle }}>
-                  <th style={{ padding: "9px 12px 9px 16px", textAlign: "left", borderBottom: `1px solid ${T.border}`, width: 40 }}>
-                    <input type="checkbox"
-                      checked={selected.size === filtered.length && filtered.length > 0}
-                      onChange={toggleAll}
-                      style={{ accentColor: T.accent, cursor: "pointer" }}
-                    />
-                  </th>
-                  {["TÊN TNV", "KHÓA TU", "NGÀY ĐẾN / RỜI", "GIA ĐÌNH", "NHIỆM VỤ", "PHÒNG", "THANH TOÁN", "TRẠNG THÁI"].map(h => (
-                    <th key={h} style={{
-                      padding: "9px 12px", textAlign: "left",
-                      fontSize: 10, fontWeight: 700, textTransform: "uppercase",
-                      letterSpacing: "0.08em", color: T.textMut,
-                      borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap",
-                    }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(v => (
-                  <tr key={v.id} style={{ transition: "background 0.1s" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.subtle; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                  >
-                    <td style={{ padding: "11px 12px 11px 16px", borderBottom: `1px solid ${T.borderLight}` }}>
-                      <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggleSelect(v.id)}
-                        style={{ accentColor: T.accent, cursor: "pointer" }} />
-                    </td>
-
-                    {/* Name */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{
-                          width: 32, height: 32, borderRadius: "50%",
-                          background: T.accentBg, color: T.accent,
-                          fontSize: 12, fontWeight: 700, flexShrink: 0,
-                          border: `1.5px solid ${T.border}`,
-                          display: "flex", alignContent: "center", justifyContent: "center",
-                          alignItems: "center",
-                          overflow: "hidden",
-                        }}>
-                          {v.avatarUrl ? (
-                            <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          ) : (
-                            v.hoTen.split(" ").pop()?.charAt(0) || "T"
-                          )}
-                        </div>
-                        <div>
-                          <Link href={`/tinh-nguyen-vien/${v.id}`} style={{
-                            fontWeight: 600, color: T.text, display: "block",
-                            textDecoration: "none", fontSize: 13,
-                          }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = T.accent; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T.text; }}
-                          >
-                            {v.hoTen}
-                          </Link>
-                          <span style={{ fontSize: 11.5, color: T.textMut }}>{v.email}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Retreat Name */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec, fontWeight: 500 }}>
-                      {retreats.find(r => r.id === v.retreatId)?.ten || "—"}
-                    </td>
-
-                    {/* Dates */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec }}>
-                      <div>{v.ngayDen ? new Date(v.ngayDen).toLocaleDateString("vi-VN") : "—"}</div>
-                      <div style={{ color: T.textMut }}>→ {v.ngayRoi ? new Date(v.ngayRoi).toLocaleDateString("vi-VN") : "—"}</div>
-                    </td>
-
-                    {/* Gia đình — inline editable */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                      <FamilyCell volunteerId={v.id} value={v.giaDinhPhapDam} />
-                    </td>
-
-                    {/* Nhiệm vụ — inline editable */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, maxWidth: 160 }}>
-                      <TaskCell volunteerId={v.id} value={v.nhiemVu} />
-                    </td>
-
-                    {/* Phòng — inline editable text */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                      <RoomCell volunteerId={v.id} value={v.phong} />
-                    </td>
-
-                    {/* Thanh toán — inline editable */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                      <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
-                    </td>
-
-                    {/* Trạng thái — inline editable */}
-                    <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                      <StatusCell volunteerId={v.id} value={v.trangThai} />
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="desktop-only-block table-wrapper" style={{ width: "100%", maxWidth: "100%" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 700 }}>
+                <thead>
+                  <tr style={{ background: T.subtle }}>
+                    <th style={{ padding: "9px 12px 9px 16px", textAlign: "left", borderBottom: `1px solid ${T.border}`, width: 40 }}>
+                      <input type="checkbox"
+                        checked={selected.size === filtered.length && filtered.length > 0}
+                        onChange={toggleAll}
+                        style={{ accentColor: T.accent, cursor: "pointer" }}
+                      />
+                    </th>
+                    {["TÊN TNV", "KHÓA TU", "NGÀY ĐẾN / RỜI", "GIA ĐÌNH", "NHIỆM VỤ", "PHÒNG", "THANH TOÁN", "TRẠNG THÁI"].map(h => (
+                      <th key={h} style={{
+                        padding: "9px 12px", textAlign: "left",
+                        fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+                        letterSpacing: "0.08em", color: T.textMut,
+                        borderBottom: `1px solid ${T.border}`, whiteSpace: "nowrap",
+                      }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filtered.map(v => (
+                    <tr key={v.id} style={{ transition: "background 0.1s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.subtle; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    >
+                      <td style={{ padding: "11px 12px 11px 16px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggleSelect(v.id)}
+                          style={{ accentColor: T.accent, cursor: "pointer" }} />
+                      </td>
+
+                      {/* Name */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: "50%",
+                            background: T.accentBg, color: T.accent,
+                            fontSize: 12, fontWeight: 700, flexShrink: 0,
+                            border: `1.5px solid ${T.border}`,
+                            display: "flex", alignContent: "center", justifyContent: "center",
+                            alignItems: "center",
+                            overflow: "hidden",
+                          }}>
+                            {v.avatarUrl ? (
+                              <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                              v.hoTen.split(" ").pop()?.charAt(0) || "T"
+                            )}
+                          </div>
+                          <div>
+                            <Link href={`/tinh-nguyen-vien/${v.id}`} style={{
+                              fontWeight: 600, color: T.text, display: "block",
+                              textDecoration: "none", fontSize: 13,
+                            }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = T.accent; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T.text; }}
+                            >
+                              {v.hoTen}
+                            </Link>
+                            <span style={{ fontSize: 11.5, color: T.textMut }}>{v.email}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Retreat Name */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec, fontWeight: 500 }}>
+                        {retreats.find(r => r.id === v.retreatId)?.ten || "—"}
+                      </td>
+
+                      {/* Dates */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec }}>
+                        <div>{v.ngayDen ? new Date(v.ngayDen).toLocaleDateString("vi-VN") : "—"}</div>
+                        <div style={{ color: T.textMut }}>→ {v.ngayRoi ? new Date(v.ngayRoi).toLocaleDateString("vi-VN") : "—"}</div>
+                      </td>
+
+                      {/* Gia đình — inline editable */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <FamilyCell volunteerId={v.id} value={v.giaDinhPhapDam} />
+                      </td>
+
+                      {/* Nhiệm vụ — inline editable */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, maxWidth: 160 }}>
+                        <TaskCell volunteerId={v.id} value={v.nhiemVu} />
+                      </td>
+
+                      {/* Phòng — inline editable text */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <RoomCell volunteerId={v.id} value={v.phong} />
+                      </td>
+
+                      {/* Thanh toán — inline editable */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
+                      </td>
+
+                      {/* Trạng thái — inline editable */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <StatusCell volunteerId={v.id} value={v.trangThai} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="mobile-only" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {filtered.map(v => (
+                <div key={v.id} style={{
+                  background: T.surface,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 12,
+                  padding: 16,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  boxShadow: "var(--shadow-sm)",
+                }}>
+                  {/* Top Header details */}
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggleSelect(v.id)}
+                      style={{ accentColor: T.accent, cursor: "pointer", marginTop: 10 }} />
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%",
+                      background: T.accentBg, color: T.accent,
+                      fontSize: 13, fontWeight: 700, flexShrink: 0,
+                      border: `1.5px solid ${T.border}`,
+                      display: "flex", alignContent: "center", justifyContent: "center",
+                      alignItems: "center", overflow: "hidden",
+                    }}>
+                      {v.avatarUrl ? (
+                        <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        v.hoTen.split(" ").pop()?.charAt(0) || "T"
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Link href={`/tinh-nguyen-vien/${v.id}`} style={{
+                        fontWeight: 600, color: T.text, display: "block",
+                        textDecoration: "none", fontSize: 14,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                      }}>
+                        {v.hoTen}
+                      </Link>
+                      <div style={{ fontSize: 11.5, color: T.textMut, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {v.email}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                      <StatusCell volunteerId={v.id} value={v.trangThai} />
+                    </div>
+                  </div>
+
+                  {/* Details block inside Card */}
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px 14px",
+                    background: T.subtle,
+                    padding: 12,
+                    borderRadius: 8,
+                    fontSize: 12,
+                    border: `1px solid ${T.borderLight}`
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Khóa tu
+                      </div>
+                      <div style={{ color: T.textSec, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {retreats.find(r => r.id === v.retreatId)?.ten || "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Ngày đến/về
+                      </div>
+                      <div style={{ color: T.textSec }}>
+                        {v.ngayDen ? new Date(v.ngayDen).toLocaleDateString("vi-VN") : "—"}
+                        <span style={{ color: T.textMut, margin: "0 4px" }}>→</span>
+                        {v.ngayRoi ? new Date(v.ngayRoi).toLocaleDateString("vi-VN") : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Gia đình
+                      </div>
+                      <FamilyCell volunteerId={v.id} value={v.giaDinhPhapDam} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Nhiệm vụ
+                      </div>
+                      <TaskCell volunteerId={v.id} value={v.nhiemVu} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Phòng
+                      </div>
+                      <RoomCell volunteerId={v.id} value={v.phong} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Thanh toán
+                      </div>
+                      <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
