@@ -86,26 +86,31 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
           <button
             onClick={handleSwitchRetreat}
             style={{
-              background: "var(--bg-secondary)",
-              border: "1px solid var(--border)",
-              borderRadius: "6px",
-              padding: "4px 8px",
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "var(--text-secondary)",
+              background: "var(--accent-bg)",
+              border: "1.5px solid var(--accent)",
+              borderRadius: "999px",
+              padding: "5px 12px",
+              fontSize: "11.5px",
+              fontWeight: 700,
+              color: "var(--accent)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               gap: 4,
+              boxShadow: "0 2px 6px var(--accent-glow)",
               transition: "all 0.15s ease",
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.borderColor = "var(--accent)";
-              e.currentTarget.style.color = "var(--accent)";
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.color = "#fff";
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 10px rgba(45, 90, 39, 0.15)";
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.borderColor = "var(--border)";
-              e.currentTarget.style.color = "var(--text-secondary)";
+              e.currentTarget.style.background = "var(--accent-bg)";
+              e.currentTarget.style.color = "var(--accent)";
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "0 2px 6px var(--accent-glow)";
             }}
           >
             🔄 Đổi khóa tu
