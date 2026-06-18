@@ -1,0 +1,26 @@
+{
+  "name": "TNV Manager – Quản Lý Tình Nguyện Viên",
+  "short_name": "TNV Manager",
+  "description": "Ứng dụng quản lý tình nguyện viên cho khóa tu – Làng Mai Thái Lan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0f1a",
+  "theme_color": "#0d0f1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "vi"
+}
