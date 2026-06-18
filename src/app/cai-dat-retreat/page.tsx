@@ -55,6 +55,7 @@ function RetreatConfigContent() {
   const [moTa, setMoTa] = useState("");
   const [families, setFamilies] = useState<FamilyConfig[]>([]);
   const [tasks, setTasks] = useState<string[]>([]);
+  const [posterUrl, setPosterUrl] = useState("");
 
   // State for creating new family
   const [newFamilyName, setNewFamilyName] = useState("");
@@ -76,6 +77,7 @@ function RetreatConfigContent() {
       setMoTa(activeRetreat.moTa || "");
       setFamilies(activeRetreat.families);
       setTasks(activeRetreat.tasks);
+      setPosterUrl(activeRetreat.posterUrl || "");
     }
   }, [activeRetreat]);
 
@@ -102,6 +104,7 @@ function RetreatConfigContent() {
       moTa,
       families,
       tasks,
+      posterUrl,
     });
 
     setSaved(true);
@@ -234,6 +237,78 @@ function RetreatConfigContent() {
               <div className="form-group">
                 <label className="form-label">Ngày kết thúc</label>
                 <input type="date" className="form-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+              <div className="form-group" style={{ gridColumn: "1/-1" }}>
+                <label className="form-label">Flyer / Poster Khóa Tu</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 4 }}>
+                  {posterUrl ? (
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      border: "1px solid var(--border)",
+                      flexShrink: 0
+                    }}>
+                      <img src={posterUrl} alt="Flyer Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: "8px",
+                      border: "2px dashed var(--border)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--text-muted)",
+                      fontSize: 20,
+                      flexShrink: 0
+                    }}>
+                      🖼️
+                    </div>
+                  )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        id="poster-upload-input"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 1.2 * 1024 * 1024) {
+                              alert("Kích thước ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 1.2MB để tối ưu dung lượng lưu trữ.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setPosterUrl(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <label htmlFor="poster-upload-input" className="btn btn-secondary btn-sm" style={{ cursor: "pointer", margin: 0 }}>
+                        Tải ảnh lên...
+                      </label>
+                      {posterUrl && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: "var(--red)", padding: "4px 8px" }}
+                          onClick={() => setPosterUrl("")}
+                        >
+                          Xóa
+                        </button>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 11.5, color: "var(--text-muted)" }}>
+                      Hỗ trợ định dạng ảnh JPG, PNG. Ảnh này sẽ hiển thị ở trang chủ và dashboard quản lý.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

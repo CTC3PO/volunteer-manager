@@ -195,7 +195,47 @@ export const useVolunteerStore = create<VolunteerStore>()(
           if (updated) {
             dbWriteRetreat(updated, state.firebaseConfig);
           }
-          return { retreats: nextRetreats };
+
+          // Cascade changes to volunteers associated with this retreat
+          const updatedFamilies = updates.families;
+          const updatedTasks = updates.tasks;
+          
+          const nextVolunteers = state.volunteers.map((v) => {
+            if (v.retreatId !== id) return v;
+
+            let updatedV = { ...v };
+            let changed = false;
+
+            // If families were updated, check if volunteer's family is still valid
+            if (updatedFamilies) {
+              const familyStillExists = updatedFamilies.some((f) => f.id === v.giaDinhPhapDam);
+              if (v.giaDinhPhapDam && !familyStillExists) {
+                updatedV.giaDinhPhapDam = undefined;
+                changed = true;
+              }
+            }
+
+            // If tasks were updated, filter out any tasks that no longer exist in the retreat
+            if (updatedTasks) {
+              const nextTasks = v.nhiemVu.filter((task) => updatedTasks.includes(task));
+              if (nextTasks.length !== v.nhiemVu.length) {
+                updatedV.nhiemVu = nextTasks;
+                changed = true;
+              }
+            }
+
+            if (changed) {
+              updatedV.ngayCapNhat = new Date().toISOString();
+              dbWriteVolunteer(updatedV, state.firebaseConfig);
+            }
+
+            return updatedV;
+          });
+
+          return { 
+            retreats: nextRetreats,
+            volunteers: nextVolunteers
+          };
         });
       },
 

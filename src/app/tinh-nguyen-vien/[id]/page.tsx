@@ -6,7 +6,7 @@ import { useVolunteerStore } from "@/shared/lib/store";
 import { Volunteer } from "@/shared/types/volunteer";
 import {
   ArrowLeft, Edit2, Save, X, CheckCircle, Clock, XCircle, Trash2,
-  Phone, Mail, MapPin, Shield, Heart, BookOpen, Users, Briefcase
+  Phone, Mail, MapPin, Shield, Heart, BookOpen, Users, Briefcase, Download
 } from "lucide-react";
 
 type Tab = "ho-so" | "phan-cong" | "suc-khoe" | "tam-linh";
@@ -37,6 +37,7 @@ export default function VolunteerDetailPage() {
   const updateVolunteer = useVolunteerStore((s) => s.updateVolunteer);
   const deleteVolunteer = useVolunteerStore((s) => s.deleteVolunteer);
   const retreats = useVolunteerStore((s) => s.retreats);
+  const emailTemplate = useVolunteerStore((s) => s.emailTemplate);
 
   const [activeTab, setActiveTab] = useState<Tab>("ho-so");
   const [editing, setEditing] = useState(false);
@@ -67,7 +68,6 @@ export default function VolunteerDetailPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
-
   const handleCancel = () => {
     setForm(volunteer);
     setEditing(false);
@@ -78,6 +78,36 @@ export default function VolunteerDetailPage() {
       deleteVolunteer(volunteer.id);
       router.push("/tinh-nguyen-vien");
     }
+  };
+
+  const handleSendWelcomeEmail = () => {
+    if (!volunteer) return;
+
+    const nameStr = volunteer.hoTen || "";
+    const familyStr = family ? `${family.emoji} ${family.label}` : "Chưa phân gia đình";
+    const roomStr = volunteer.phong || "Chưa phân phòng";
+    const tasksStr = volunteer.nhiemVu && volunteer.nhiemVu.length > 0
+      ? volunteer.nhiemVu.join(", ")
+      : "Chưa phân công nhiệm vụ";
+    const arrivalStr = volunteer.ngayDen
+      ? new Date(volunteer.ngayDen).toLocaleDateString("vi-VN")
+      : "Chưa rõ ngày";
+    const departureStr = volunteer.ngayRoi
+      ? new Date(volunteer.ngayRoi).toLocaleDateString("vi-VN")
+      : "Chưa rõ ngày";
+
+    const mailBody = emailTemplate
+      .replace(/{name}/g, nameStr)
+      .replace(/{family}/g, familyStr)
+      .replace(/{room}/g, roomStr)
+      .replace(/{tasks}/g, tasksStr)
+      .replace(/{arrivalDate}/g, arrivalStr)
+      .replace(/{departureDate}/g, departureStr);
+
+    const subject = `Thông tin đón tiếp tình nguyện viên - ${nameStr}`;
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(volunteer.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
+    
+    window.open(gmailUrl, "_blank");
   };
 
   const set = (key: keyof Volunteer, val: unknown) =>
@@ -179,6 +209,13 @@ export default function VolunteerDetailPage() {
                   }}
                 >
                   <Trash2 size={14} /> Xóa hồ sơ
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSendWelcomeEmail}
+                  style={{ gap: 5 }}
+                >
+                  <Mail size={14} /> Gửi Email
                 </button>
                 <button className="btn btn-secondary" onClick={() => setEditing(true)}>
                   <Edit2 size={15} /> Chỉnh sửa
@@ -470,6 +507,47 @@ export default function VolunteerDetailPage() {
                       <option>Từ chối</option>
                     </select>
                   </div>
+                  <div className="form-group" style={{ gridColumn: "1/-1" }}>
+                    <label className="form-label">Vé máy bay</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        id="ticket-upload-input"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 1.5 * 1024 * 1024) {
+                              alert("Kích thước file quá lớn! Vui lòng chọn ảnh nhỏ hơn 1.5MB.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              set("veMayBayUrl", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <label htmlFor="ticket-upload-input" className="btn btn-secondary btn-sm" style={{ cursor: "pointer", margin: 0 }}>
+                        Tải vé máy bay lên...
+                      </label>
+                      {data.veMayBayUrl && (
+                        <>
+                          <span style={{ fontSize: 12, color: "var(--green)" }}>✓ Đã chọn vé</span>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: "var(--red)", padding: "4px 8px" }}
+                            onClick={() => set("veMayBayUrl", undefined)}
+                          >
+                            Xóa vé
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="info-grid">
@@ -481,6 +559,49 @@ export default function VolunteerDetailPage() {
                   <InfoItem label="Ngày thanh toán" value={volunteer.ngayThanhToan} />
                   <InfoItem label="Cúng dường thêm" value={volunteer.cungDuongThem ? `${volunteer.cungDuongThem} Baht` : undefined} />
                   <InfoItem label="Đã thanh toán" value={volunteer.daThanhToan ? "✓ Có" : "✗ Chưa"} />
+                  
+                  <div className="info-item" style={{ gridColumn: "1/-1", borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 6 }}>
+                    <div className="info-item-label" style={{ marginBottom: 6 }}>Vé máy bay</div>
+                    {volunteer.veMayBayUrl ? (
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                        <div style={{
+                          width: 120,
+                          height: 80,
+                          borderRadius: 6,
+                          overflow: "hidden",
+                          border: "1px solid var(--border)",
+                          background: "var(--bg-primary)",
+                          cursor: "zoom-in"
+                        }}
+                        onClick={() => window.open(volunteer.veMayBayUrl, "_blank")}
+                        title="Click để xem hình ảnh gốc"
+                        >
+                          <img 
+                            src={volunteer.veMayBayUrl} 
+                            alt="Vé máy bay" 
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                          />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                            Nhấp vào hình ảnh để xem kích thước đầy đủ trong tab mới.
+                          </span>
+                          <a 
+                            href={volunteer.veMayBayUrl} 
+                            download={`${volunteer.hoTen.toLowerCase().replace(/\s+/g, "_")}_ve_may_bay.jpg`}
+                            className="btn btn-secondary btn-sm"
+                            style={{ alignSelf: "flex-start", gap: 5, padding: "5px 10px", fontSize: 11.5, textDecoration: "none" }}
+                          >
+                            <Download size={12} /> Tải xuống vé
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>
+                        Chưa tải lên vé máy bay
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

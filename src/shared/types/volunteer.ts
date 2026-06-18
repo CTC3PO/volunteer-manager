@@ -56,6 +56,7 @@ export interface Volunteer {
   ngayRoi: string;
   thongTinChuyenBayDen?: string;
   thongTinChuyenBayVe?: string;
+  veMayBayUrl?: string; // Base64 or URL for flight tickets
 
   // Chi phí
   chiPhiPhuongTien: boolean;

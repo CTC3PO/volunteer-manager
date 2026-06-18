@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useVolunteerStore } from "@/shared/lib/store";
 import { retreatConfig } from "@/shared/config/retreat-config";
 import { Retreat } from "@/shared/types/retreat";
@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Users, CheckCircle, Clock, XCircle, CreditCard,
-  Calendar, Upload, Plus, ChevronRight, Copy, MapPin, Settings
+  Calendar, Upload, Plus, ChevronRight, Copy, MapPin, Settings,
+  Share2, Download, X
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const setActiveRetreatId = useVolunteerStore((s) => s.setActiveRetreatId);
   const addRetreat = useVolunteerStore((s) => s.addRetreat);
   const deleteRetreat = useVolunteerStore((s) => s.deleteRetreat);
+  const updateRetreat = useVolunteerStore((s) => s.updateRetreat);
 
   // Local State for Creating Retreat
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -29,6 +31,19 @@ export default function DashboardPage() {
   const [endDate, setEndDate] = useState("2026-07-20");
   const [duplicateFromId, setDuplicateFromId] = useState("default"); // 'default' or a retreat ID
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Local State for Flyer display & sharing
+  const [showFlyerLightbox, setShowFlyerLightbox] = useState(false);
+  const [showShareDropdown, setShowShareDropdown] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  // Toast effect
+  useEffect(() => {
+    if (toastMessage) {
+      const t = setTimeout(() => setToastMessage(""), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [toastMessage]);
 
   const activeRetreat = retreats.find((r) => r.id === activeRetreatId);
 
@@ -582,6 +597,226 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Retreat Flyer Card */}
+                <div className="card animate-fade-in animate-delay-4" style={{ position: "relative" }}>
+                  <div className="section-title">🖼️ Flyer Khóa Tu</div>
+                  {activeRetreat.posterUrl ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div 
+                        style={{ 
+                          position: "relative",
+                          width: "100%",
+                          height: "170px",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          border: "1px solid var(--border)",
+                          cursor: "pointer",
+                          background: "var(--bg-primary)"
+                        }}
+                        onClick={() => setShowFlyerLightbox(true)}
+                      >
+                        <img 
+                          src={activeRetreat.posterUrl} 
+                          alt="Flyer Khóa Tu" 
+                          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }}
+                          onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.03)"}
+                          onMouseOut={(e) => e.currentTarget.style.transform = "scale(1.0)"}
+                        />
+                        <div style={{
+                          position: "absolute",
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          background: "rgba(0, 0, 0, 0.45)",
+                          color: "#fff",
+                          padding: "6px",
+                          fontSize: "11px",
+                          textAlign: "center",
+                          backdropFilter: "blur(2px)",
+                          fontWeight: 500
+                        }}>
+                          🔍 Click để xem phóng to
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, position: "relative" }}>
+                        <a 
+                          href={activeRetreat.posterUrl} 
+                          download={`${activeRetreat.ten.toLowerCase().replace(/\s+/g, "_")}_flyer.jpg`}
+                          className="btn btn-secondary"
+                          style={{ justifyContent: "center", padding: "8px 12px", fontSize: "12px", gap: 5, textDecoration: "none" }}
+                        >
+                          <Download size={13} /> Tải Flyer
+                        </a>
+                        
+                        <div style={{ position: "relative" }}>
+                          <button 
+                            onClick={() => {
+                              const shareUrl = window.location.origin + (activeRetreat.posterUrl || "");
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: `Flyer Khóa Tu - ${activeRetreat.ten}`,
+                                  text: `Hãy tham gia khóa tu ${activeRetreat.ten} cùng chúng tôi!`,
+                                  url: shareUrl,
+                                }).catch((err) => console.log(err));
+                              } else {
+                                setShowShareDropdown(!showShareDropdown);
+                              }
+                            }}
+                            className="btn btn-primary"
+                            style={{ width: "100%", justifyContent: "center", padding: "8px 12px", fontSize: "12px", gap: 5 }}
+                          >
+                            <Share2 size={13} /> Chia sẻ
+                          </button>
+
+                          {showShareDropdown && (
+                            <div style={{
+                              position: "absolute",
+                              bottom: "100%",
+                              right: 0,
+                              marginBottom: 8,
+                              background: "#fff",
+                              border: "1px solid var(--border)",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+                              padding: "6px",
+                              zIndex: 100,
+                              minWidth: "160px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 2,
+                              animation: "fade-in 0.1s ease"
+                            }}>
+                              <a
+                                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + activeRetreat.posterUrl)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setShowShareDropdown(false)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                                  fontSize: "12px", textDecoration: "none", color: "var(--text-primary)",
+                                  borderRadius: "6px", transition: "background 0.2s"
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = "var(--bg-primary)"}
+                                onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                              >
+                                📘 Facebook
+                              </a>
+                              <a
+                                href={`https://t.me/share/url?url=${encodeURIComponent(window.location.origin + activeRetreat.posterUrl)}&text=${encodeURIComponent('Tham gia khóa tu ' + activeRetreat.ten)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setShowShareDropdown(false)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                                  fontSize: "12px", textDecoration: "none", color: "var(--text-primary)",
+                                  borderRadius: "6px", transition: "background 0.2s"
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = "var(--bg-primary)"}
+                                onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                              >
+                                ✈️ Telegram
+                              </a>
+                              <a
+                                href={`https://api.whatsapp.com/send?text=${encodeURIComponent('Tham gia ' + activeRetreat.ten + ': ' + window.location.origin + activeRetreat.posterUrl)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => setShowShareDropdown(false)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                                  fontSize: "12px", textDecoration: "none", color: "var(--text-primary)",
+                                  borderRadius: "6px", transition: "background 0.2s"
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = "var(--bg-primary)"}
+                                onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                              >
+                                💬 WhatsApp
+                              </a>
+                              <div style={{ height: "1px", background: "var(--border)", margin: "4px 0" }} />
+                              <button
+                                onClick={() => {
+                                  const shareUrl = window.location.origin + (activeRetreat.posterUrl || "");
+                                  navigator.clipboard.writeText(shareUrl).then(() => {
+                                    setToastMessage("Đã sao chép liên kết flyer!");
+                                    setShowShareDropdown(false);
+                                  });
+                                }}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                                  fontSize: "12px", background: "none", border: "none", width: "100%",
+                                  textAlign: "left", color: "var(--text-primary)", cursor: "pointer",
+                                  borderRadius: "6px", transition: "background 0.2s"
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = "var(--bg-primary)"}
+                                onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                              >
+                                <Copy size={12} /> Sao chép liên kết
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        id="dashboard-poster-upload"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 1.2 * 1024 * 1024) {
+                              alert("Kích thước ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 1.2MB.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              updateRetreat(activeRetreat.id, { posterUrl: reader.result as string });
+                              setToastMessage("Đã tải lên flyer khóa tu thành công!");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <label 
+                        htmlFor="dashboard-poster-upload" 
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          borderRadius: "8px",
+                          border: "2px dashed var(--border)",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "var(--text-muted)",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          gap: 6,
+                          background: "var(--bg-secondary)",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.borderColor = "var(--accent)";
+                          e.currentTarget.style.background = "var(--accent-bg)";
+                          e.currentTarget.style.color = "var(--accent)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.borderColor = "var(--border)";
+                          e.currentTarget.style.background = "var(--bg-secondary)";
+                          e.currentTarget.style.color = "var(--text-muted)";
+                        }}
+                      >
+                        <span style={{ fontSize: "24px" }}>🖼️</span>
+                        <span>Nhấp để tải lên Flyer</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -663,6 +898,122 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Lightbox Modal */}
+      {showFlyerLightbox && activeRetreat.posterUrl && (
+        <div 
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(26, 26, 24, 0.85)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "20px"
+          }}
+          onClick={() => setShowFlyerLightbox(false)}
+        >
+          <div 
+            style={{
+              position: "relative",
+              maxWidth: "90%",
+              maxHeight: "90vh",
+              borderRadius: "12px",
+              overflow: "hidden",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.3)",
+              background: "#fff"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowFlyerLightbox(false)}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: "rgba(255, 255, 255, 0.9)",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                color: "var(--text-primary)",
+                transition: "background 0.2s"
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = "#fff"}
+              onMouseOut={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.9)"}
+            >
+              <X size={18} />
+            </button>
+            <img 
+              src={activeRetreat.posterUrl} 
+              alt="Flyer Khóa Tu Full" 
+              style={{
+                maxWidth: "100%",
+                maxHeight: "80vh",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+            <div style={{
+              background: "#fff",
+              padding: "14px 20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid var(--border)"
+            }}>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+                  {activeRetreat.ten}
+                </h4>
+                <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                  Flyer truyền thông chiến dịch
+                </p>
+              </div>
+              <a 
+                href={activeRetreat.posterUrl} 
+                download={`${activeRetreat.ten.toLowerCase().replace(/\s+/g, "_")}_flyer.jpg`}
+                className="btn btn-primary"
+                style={{ padding: "8px 16px", fontSize: "13px", gap: 6, textDecoration: "none" }}
+              >
+                <Download size={14} /> Tải hình ảnh
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="toast success" style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          zIndex: 9999,
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          background: "#fff",
+          borderLeft: "4px solid var(--green)",
+          padding: "12px 20px",
+          borderRadius: "8px",
+          color: "var(--text-primary)"
+        }}>
+          <CheckCircle size={16} color="var(--green)" />
+          <span style={{ fontSize: "13.5px", fontWeight: 500 }}>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }
