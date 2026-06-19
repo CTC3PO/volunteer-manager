@@ -106,8 +106,11 @@ interface VolunteerStore {
   retreats: Retreat[];
   activeRetreatId: string | null;
   themeMode: "light" | "dark";
+  language: "vi" | "en" | "th";
   emailTemplate: string;
   firebaseConfig: any | null; // Pasted Firebase config object
+  deletedVolunteerIds: string[];
+  currentUser: { email: string } | null;
 
   // Volunteer Actions
   addVolunteer: (v: Volunteer) => void;
@@ -124,8 +127,16 @@ interface VolunteerStore {
 
   // App Settings Actions
   setThemeMode: (mode: "light" | "dark") => void;
+  setLanguage: (lang: "vi" | "en" | "th") => void;
   setEmailTemplate: (template: string) => void;
   setFirebaseConfig: (config: any | null) => void;
+
+  // Auth Actions
+  login: (email: string, pass: string) => boolean;
+  logout: () => void;
+
+  // Cleanup Data Action
+  cleanupVolunteersData: () => void;
 }
 
 export const useVolunteerStore = create<VolunteerStore>()(
@@ -135,18 +146,27 @@ export const useVolunteerStore = create<VolunteerStore>()(
       retreats: initialRetreats,
       activeRetreatId: "wakeup-2026",
       themeMode: "light",
+      language: "vi",
       emailTemplate: DEFAULT_EMAIL_TEMPLATE,
       firebaseConfig: null,
+      deletedVolunteerIds: [],
+      currentUser: null,
 
       // Volunteer Actions
       addVolunteer: (v) => {
-        set((state) => ({ volunteers: [...state.volunteers, v] }));
+        // If it was previously marked as deleted, unmark it
+        set((state) => ({
+          volunteers: [...state.volunteers, v],
+          deletedVolunteerIds: (state.deletedVolunteerIds || []).filter((id) => id !== v.id),
+        }));
         dbWriteVolunteer(v, get().firebaseConfig);
       },
 
       addVolunteers: (vs) => {
+        const ids = vs.map((v) => v.id);
         set((state) => ({
           volunteers: [...state.volunteers, ...vs],
+          deletedVolunteerIds: (state.deletedVolunteerIds || []).filter((id) => !ids.includes(id)),
         }));
         const config = get().firebaseConfig;
         if (config) {
@@ -171,6 +191,7 @@ export const useVolunteerStore = create<VolunteerStore>()(
 
       deleteVolunteer: (id) => {
         set((state) => ({
+          deletedVolunteerIds: [...(state.deletedVolunteerIds || []), id],
           volunteers: state.volunteers.filter((v) => v.id !== id),
         }));
         dbDeleteVolunteer(id, get().firebaseConfig);
@@ -242,6 +263,7 @@ export const useVolunteerStore = create<VolunteerStore>()(
       deleteRetreat: (id) => {
         const config = get().firebaseConfig;
         const assocVolunteers = get().volunteers.filter((v) => v.retreatId === id);
+        const assocIds = assocVolunteers.map((v) => v.id);
 
         set((state) => {
           const nextVolunteers = state.volunteers.filter((v) => v.retreatId !== id);
@@ -249,6 +271,7 @@ export const useVolunteerStore = create<VolunteerStore>()(
           return {
             retreats: nextRetreats,
             volunteers: nextVolunteers,
+            deletedVolunteerIds: [...(state.deletedVolunteerIds || []), ...assocIds],
             activeRetreatId: state.activeRetreatId === id ? null : state.activeRetreatId,
           };
         });
@@ -266,11 +289,93 @@ export const useVolunteerStore = create<VolunteerStore>()(
       setThemeMode: (mode) =>
         set(() => ({ themeMode: mode })),
 
+      setLanguage: (lang) =>
+        set(() => ({ language: lang })),
+
       setEmailTemplate: (template) =>
         set(() => ({ emailTemplate: template })),
 
       setFirebaseConfig: (config) =>
         set(() => ({ firebaseConfig: config })),
+
+      login: (email, pass) => {
+        if (email === "volunteer@pvthailand.org" && pass === "plumvillage2026") {
+          set(() => ({ currentUser: { email } }));
+          return true;
+        }
+        return false;
+      },
+
+      logout: () => {
+        set(() => ({ currentUser: null }));
+      },
+
+      cleanupVolunteersData: () => {
+        set((state) => {
+          let hasChanges = false;
+          const config = state.firebaseConfig;
+          const cleaned = state.volunteers.reduce((acc: Volunteer[], v) => {
+            const name = v.hoTen?.trim() || "";
+            const isInvalidName =
+              name === "" ||
+              name.includes("@") ||
+              name.includes("Tên TNV") ||
+              name.includes("Bạn hãy") ||
+              name.includes("Tôi đồng ý") ||
+              name.includes("Thời gian") ||
+              name.includes("Thời điểm") ||
+              name.length > 50;
+
+            if (isInvalidName) {
+              hasChanges = true;
+              dbDeleteVolunteer(v.id, config);
+              return acc;
+            }
+
+            const cleanDateStr = (dateStr?: string) => {
+              if (!dateStr) return "";
+              const ymdMatch = dateStr.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+              if (ymdMatch) {
+                const y = ymdMatch[1];
+                const m = ymdMatch[2].padStart(2, "0");
+                const d = ymdMatch[3].padStart(2, "0");
+                return `${y}-${m}-${d}`;
+              }
+              const dmyMatch = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+              if (dmyMatch) {
+                const d = dmyMatch[1].padStart(2, "0");
+                const m = dmyMatch[2].padStart(2, "0");
+                const y = dmyMatch[3];
+                return `${y}-${m}-${d}`;
+              }
+              return dateStr;
+            };
+
+            const newNgayDen = cleanDateStr(v.ngayDen);
+            const newNgayRoi = cleanDateStr(v.ngayRoi);
+
+            if (newNgayDen !== v.ngayDen || newNgayRoi !== v.ngayRoi) {
+              hasChanges = true;
+              const updatedV = {
+                ...v,
+                ngayDen: newNgayDen,
+                ngayRoi: newNgayRoi,
+                ngayCapNhat: new Date().toISOString(),
+              };
+              dbWriteVolunteer(updatedV, config);
+              acc.push(updatedV);
+            } else {
+              acc.push(v);
+            }
+            return acc;
+          }, []);
+
+          if (hasChanges) {
+            return { volunteers: cleaned };
+          }
+          return {};
+        });
+      },
     }),
     {
       name: "tnv-manager-volunteers",
@@ -303,11 +408,15 @@ export const startFirebaseSync = (config: any) => {
 
   // Listen to volunteers
   unsubVolunteers = onSnapshot(collection(db, "volunteers"), (snapshot) => {
+    const deletedIds = useVolunteerStore.getState().deletedVolunteerIds || [];
     const volunteersList: Volunteer[] = [];
     snapshot.forEach((doc) => {
-      volunteersList.push(doc.data() as Volunteer);
+      const data = doc.data() as Volunteer;
+      if (!deletedIds.includes(data.id)) {
+        volunteersList.push(data);
+      }
     });
-    if (volunteersList.length > 0) {
+    if (volunteersList.length > 0 || (snapshot.size === 0 && useVolunteerStore.getState().volunteers.length > 0)) {
       useVolunteerStore.setState({ volunteers: volunteersList });
     }
   });

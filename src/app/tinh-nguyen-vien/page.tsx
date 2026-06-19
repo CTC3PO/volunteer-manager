@@ -4,18 +4,28 @@ import Link from "next/link";
 import { useVolunteerStore } from "@/shared/lib/store";
 import { exportToExcel } from "@/features/export/export-excel";
 import { Volunteer, TrangThaiTNV } from "@/shared/types/volunteer";
-import { Search, Download, Plus, Check, ChevronDown } from "lucide-react";
+import { Search, Download, Plus, Check, ChevronDown, Printer, Mail, Copy, Trash2 } from "lucide-react";
 
 /* ── Design Tokens ── */
 const T = {
-  bg: "#f5f2ee", surface: "#fff", subtle: "#faf8f5", muted: "#f0ece6",
-  border: "#e8e3db", borderLight: "#f0ede8",
-  text: "#1a1a18", textSec: "#5c5a54", textMut: "#9e9a92",
-  accent: "#2d5a27", accentBg: "#e8f2e6",
-  green: "#22863a", greenBg: "#edfaef",
-  amber: "#b45309", amberBg: "#fef9ee",
-  red: "#c0392b",   redBg: "#fef2f2",
+  bg: "var(--bg-base)", surface: "var(--bg-surface)", subtle: "var(--bg-subtle)", muted: "var(--bg-muted)",
+  border: "var(--border)", borderLight: "var(--border-light)",
+  text: "var(--text-primary)", textSec: "var(--text-secondary)", textMut: "var(--text-muted)",
+  accent: "var(--accent)", accentBg: "var(--accent-bg)",
+  green: "var(--green)", greenBg: "var(--green-bg)",
+  amber: "var(--amber)", amberBg: "var(--amber-bg)",
+  red: "var(--red)",   redBg: "var(--red-bg)",
 };
+
+function formatDisplayDate(dateStr?: string): string {
+  if (!dateStr) return "—";
+  const parts = dateStr.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    const [year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+}
 
 /* ── Inline cell popover ── */
 type PopoverProps = {
@@ -330,6 +340,7 @@ export default function VolunteersPage() {
   const volunteers = useVolunteerStore(s => s.volunteers);
   const activeRetreatId = useVolunteerStore(s => s.activeRetreatId);
   const retreats = useVolunteerStore(s => s.retreats);
+  const emailTemplate = useVolunteerStore(s => s.emailTemplate);
 
   const activeRetreat = retreats.find(r => r.id === activeRetreatId);
 
@@ -337,6 +348,11 @@ export default function VolunteersPage() {
   const [filterFamily, setFilterFamily] = useState("all");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Bulk Email modal state
+  const [showEmailCenter, setShowEmailCenter] = useState(false);
+  const [sentStatus, setSentStatus] = useState<Set<string>>(new Set());
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   // Filter volunteers strictly belonging to active retreat
   const activeVolunteers = useMemo(() => {
@@ -361,9 +377,18 @@ export default function VolunteersPage() {
   const toggleAll = () =>
     setSelected(selected.size === filtered.length ? new Set() : new Set(filtered.map(v => v.id)));
 
+  const deleteVolunteer = useVolunteerStore(s => s.deleteVolunteer);
+
   const handleExport = () => {
     const toExport = filtered.filter(v => selected.has(v.id));
     if (toExport.length) exportToExcel(toExport);
+  };
+
+  const handleDeleteSelected = () => {
+    if (confirm(`Bạn có chắc muốn delete ${selected.size} tình nguyện viên đã chọn?`)) {
+      selected.forEach(id => deleteVolunteer(id));
+      setSelected(new Set());
+    }
   };
 
   if (!activeRetreat) {
@@ -398,17 +423,58 @@ export default function VolunteersPage() {
               {selected.size > 0 && ` · Đã chọn ${selected.size}`}
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             {selected.size > 0 && (
-              <button onClick={handleExport} style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                padding: "7px 14px", borderRadius: 999, border: `1px solid ${T.border}`,
-                background: T.surface, color: T.text, fontSize: 12.5, fontWeight: 600,
-                cursor: "pointer",
-              }}>
-                <Download size={13} /> Export ({selected.size})
-              </button>
+              <>
+                <Link
+                  href={`/tinh-nguyen-vien/in-name-tags?ids=${Array.from(selected).join(",")}`}
+                  target="_blank"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "7px 14px", borderRadius: 999, border: `1px solid ${T.border}`,
+                    background: T.surface, color: T.text, fontSize: 12.5, fontWeight: 600,
+                    cursor: "pointer", textDecoration: "none",
+                  }}
+                >
+                  <Printer size={13} /> In Thẻ Tên ({selected.size})
+                </Link>
+                <button
+                  onClick={() => setShowEmailCenter(true)}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "7px 14px", borderRadius: 999, border: `1px solid ${T.border}`,
+                    background: T.surface, color: T.text, fontSize: 12.5, fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Mail size={13} /> Gửi Email ({selected.size})
+                </button>
+                <button onClick={handleExport} style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "7px 14px", borderRadius: 999, border: `1px solid ${T.border}`,
+                  background: T.surface, color: T.text, fontSize: 12.5, fontWeight: 600,
+                  cursor: "pointer",
+                }}>
+                  <Download size={13} /> Export ({selected.size})
+                </button>
+              </>
             )}
+            <button
+              onClick={handleDeleteSelected}
+              disabled={selected.size === 0}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "7px 14px", borderRadius: 999,
+                border: `1.5px solid ${selected.size > 0 ? "var(--red)" : "var(--border)"}`,
+                background: selected.size > 0 ? "var(--red-bg)" : "var(--bg-subtle)",
+                color: selected.size > 0 ? "var(--red)" : "var(--text-muted)",
+                fontSize: 12.5, fontWeight: 600,
+                cursor: selected.size > 0 ? "pointer" : "not-allowed",
+                opacity: selected.size > 0 ? 1 : 0.6,
+              }}
+            >
+              <Trash2 size={13} /> Xóa {selected.size > 0 ? `(${selected.size})` : ""}
+            </button>
             <Link href="/tinh-nguyen-vien/moi" style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               padding: "7px 14px", borderRadius: 999, border: "none",
@@ -495,7 +561,7 @@ export default function VolunteersPage() {
                         style={{ accentColor: T.accent, cursor: "pointer" }}
                       />
                     </th>
-                    {["TÊN TNV", "KHÓA TU", "NGÀY ĐẾN / RỜI", "GIA ĐÌNH", "NHIỆM VỤ", "PHÒNG", "THANH TOÁN", "TRẠNG THÁI"].map(h => (
+                    {["TÊN TNV", "TUỔI", "NGÀY ĐẾN", "NGÀY ĐI", "TRẠNG THÁI", "THANH TOÁN", "GIA ĐÌNH", "NHIỆM VỤ", "PHÒNG"].map(h => (
                       <th key={h} style={{
                         padding: "9px 12px", textAlign: "left",
                         fontSize: 10, fontWeight: 700, textTransform: "uppercase",
@@ -549,15 +615,29 @@ export default function VolunteersPage() {
                         </div>
                       </td>
 
-                      {/* Retreat Name */}
-                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec, fontWeight: 500 }}>
-                        {retreats.find(r => r.id === v.retreatId)?.ten || "—"}
+                      {/* Tuổi */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec }}>
+                        {v.tuoi || "—"}
                       </td>
 
-                      {/* Dates */}
+                      {/* Ngày đến */}
                       <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec }}>
-                        <div>{v.ngayDen ? new Date(v.ngayDen).toLocaleDateString("vi-VN") : "—"}</div>
-                        <div style={{ color: T.textMut }}>→ {v.ngayRoi ? new Date(v.ngayRoi).toLocaleDateString("vi-VN") : "—"}</div>
+                        {formatDisplayDate(v.ngayDen)}
+                      </td>
+
+                      {/* Ngày đi */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}`, fontSize: 12.5, color: T.textSec }}>
+                        {formatDisplayDate(v.ngayRoi)}
+                      </td>
+
+                      {/* Trạng thái — inline editable */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <StatusCell volunteerId={v.id} value={v.trangThai} />
+                      </td>
+
+                      {/* Thanh toán — inline editable */}
+                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
+                        <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
                       </td>
 
                       {/* Gia đình — inline editable */}
@@ -573,16 +653,6 @@ export default function VolunteersPage() {
                       {/* Phòng — inline editable text */}
                       <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
                         <RoomCell volunteerId={v.id} value={v.phong} />
-                      </td>
-
-                      {/* Thanh toán — inline editable */}
-                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                        <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
-                      </td>
-
-                      {/* Trạng thái — inline editable */}
-                      <td style={{ padding: "11px 12px", borderBottom: `1px solid ${T.borderLight}` }}>
-                        <StatusCell volunteerId={v.id} value={v.trangThai} />
                       </td>
                     </tr>
                   ))}
@@ -698,6 +768,127 @@ export default function VolunteersPage() {
           </>
         )}
       </div>
+
+      {/* Bulk Email Center Modal */}
+      {showEmailCenter && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ maxWidth: 600 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h3 className="modal-title" style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                <Mail size={18} color="var(--accent)" /> Gửi Email Hàng Loạt ({selected.size})
+              </h3>
+              <button 
+                onClick={() => { setShowEmailCenter(false); setCopyFeedback(false); }}
+                style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--text-muted)" }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <p style={{ fontSize: 12.5, color: "var(--text-secondary)", marginBottom: 16 }}>
+              Chuẩn bị và mở Gmail web gửi email chào mừng cá nhân hóa cho từng TNV được chọn.
+            </p>
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                style={{ gap: 6 }}
+                onClick={() => {
+                  const selectedVols = activeVolunteers.filter(v => selected.has(v.id));
+                  const emails = selectedVols.map(v => v.email).filter(Boolean).join(", ");
+                  navigator.clipboard.writeText(emails);
+                  setCopyFeedback(true);
+                  setTimeout(() => setCopyFeedback(false), 2000);
+                }}
+              >
+                {copyFeedback ? <Check size={14} color="var(--green)" /> : <Copy size={14} />}
+                {copyFeedback ? "Đã copy danh sách!" : "Copy tất cả địa chỉ Email"}
+              </button>
+            </div>
+
+            {/* List of Volunteers to Mail */}
+            <div style={{ 
+              maxHeight: 300, 
+              overflowY: "auto", 
+              border: "1px solid var(--border)", 
+              borderRadius: 8, 
+              background: "var(--bg-subtle)",
+              display: "flex", 
+              flexDirection: "column" 
+            }}>
+              {activeVolunteers.filter(v => selected.has(v.id)).map((v, i) => {
+                const retreat = retreats.find((r) => r.id === v.retreatId) || retreats[0];
+                const family = retreat?.families.find((f) => f.id === v.giaDinhPhapDam);
+                const hasSent = sentStatus.has(v.id);
+
+                const handleIndividualSend = () => {
+                  const nameStr = v.hoTen || "";
+                  const familyStr = family ? `${family.emoji} ${family.label}` : "Chưa phân gia đình";
+                  const roomStr = v.phong || "Chưa phân phòng";
+                  const tasksStr = v.nhiemVu && v.nhiemVu.length > 0
+                    ? v.nhiemVu.join(", ")
+                    : "Chưa phân công nhiệm vụ";
+                  const arrivalStr = v.ngayDen
+                    ? new Date(v.ngayDen).toLocaleDateString("vi-VN")
+                    : "Chưa rõ ngày";
+                  const departureStr = v.ngayRoi
+                    ? new Date(v.ngayRoi).toLocaleDateString("vi-VN")
+                    : "Chưa rõ ngày";
+
+                  const mailBody = emailTemplate
+                    .replace(/{name}/g, nameStr)
+                    .replace(/{family}/g, familyStr)
+                    .replace(/{room}/g, roomStr)
+                    .replace(/{tasks}/g, tasksStr)
+                    .replace(/{arrivalDate}/g, arrivalStr)
+                    .replace(/{departureDate}/g, departureStr);
+
+                  const subject = `Thông tin đón tiếp tình nguyện viên - ${nameStr}`;
+                  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(v.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
+                  
+                  window.open(gmailUrl, "_blank");
+                  
+                  setSentStatus(prev => {
+                    const next = new Set(prev);
+                    next.add(v.id);
+                    return next;
+                  });
+                };
+
+                return (
+                  <div key={v.id} style={{ 
+                    display: "flex", 
+                    justifyContent: "space-between", 
+                    alignItems: "center", 
+                    padding: "10px 14px", 
+                    borderBottom: i < selected.size - 1 ? "1px solid var(--border-light)" : "none" 
+                  }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0, textAlign: "left" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{v.hoTen}</span>
+                      <span style={{ fontSize: 11.5, color: "var(--text-muted)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                        {v.email} · {family ? `${family.emoji} ${family.label}` : "Chưa gia đình"}
+                      </span>
+                    </div>
+                    <button
+                      className={`btn ${hasSent ? "btn-secondary" : "btn-primary"} btn-sm`}
+                      style={{ gap: 4 }}
+                      onClick={handleIndividualSend}
+                    >
+                      <Mail size={12} /> {hasSent ? "Mở lại Gmail" : "Gửi Email"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+              <button className="btn btn-secondary" onClick={() => { setShowEmailCenter(false); setCopyFeedback(false); }}>
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

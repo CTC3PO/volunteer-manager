@@ -6,7 +6,7 @@ import { useVolunteerStore } from "@/shared/lib/store";
 import { Volunteer } from "@/shared/types/volunteer";
 import {
   ArrowLeft, Edit2, Save, X, CheckCircle, Clock, XCircle, Trash2,
-  Phone, Mail, MapPin, Shield, Heart, BookOpen, Users, Briefcase, Download
+  Phone, Mail, MapPin, Shield, Heart, BookOpen, Users, Briefcase, Download, Printer
 } from "lucide-react";
 
 type Tab = "ho-so" | "phan-cong" | "suc-khoe" | "tam-linh";
@@ -25,6 +25,16 @@ function InfoItem({ label, value, empty = "—" }: { label: string; value?: stri
       <div className={`info-item-value ${isEmpty ? "empty" : ""}`}>{display}</div>
     </div>
   );
+}
+
+function formatDisplayDate(dateStr?: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    const [year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
 }
 
 export default function VolunteerDetailPage() {
@@ -220,6 +230,14 @@ export default function VolunteerDetailPage() {
                 <button className="btn btn-secondary" onClick={() => setEditing(true)}>
                   <Edit2 size={15} /> Chỉnh sửa
                 </button>
+                <Link
+                  href={`/tinh-nguyen-vien/${volunteer.id}/in-ho-so`}
+                  target="_blank"
+                  className="btn btn-secondary"
+                  style={{ gap: 5, textDecoration: "none" }}
+                >
+                  <Printer size={14} /> Xuất PDF
+                </Link>
               </>
             )}
           </div>
@@ -508,18 +526,18 @@ export default function VolunteerDetailPage() {
                     </select>
                   </div>
                   <div className="form-group" style={{ gridColumn: "1/-1" }}>
-                    <label className="form-label">Vé máy bay</label>
+                    <label className="form-label">Vé máy bay (Ảnh / PDF)</label>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,application/pdf"
                         style={{ display: "none" }}
                         id="ticket-upload-input"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            if (file.size > 1.5 * 1024 * 1024) {
-                              alert("Kích thước file quá lớn! Vui lòng chọn ảnh nhỏ hơn 1.5MB.");
+                            if (file.size > 800 * 1024) {
+                              alert("Kích thước file quá lớn! Vui lòng chọn file nhỏ hơn 800KB để đảm bảo đồng bộ dữ liệu tốt nhất.");
                               return;
                             }
                             const reader = new FileReader();
@@ -535,7 +553,9 @@ export default function VolunteerDetailPage() {
                       </label>
                       {data.veMayBayUrl && (
                         <>
-                          <span style={{ fontSize: 12, color: "var(--green)" }}>✓ Đã chọn vé</span>
+                          <span style={{ fontSize: 12, color: "var(--green)" }}>
+                            ✓ {data.veMayBayUrl.startsWith("data:application/pdf") ? "Đã chọn file PDF" : "Đã chọn ảnh vé"}
+                          </span>
                           <button
                             type="button"
                             className="btn btn-ghost btn-sm"
@@ -548,11 +568,55 @@ export default function VolunteerDetailPage() {
                       )}
                     </div>
                   </div>
+
+                  <div className="form-group" style={{ gridColumn: "1/-1" }}>
+                    <label className="form-label">Hóa đơn đóng phí (Ảnh / PDF)</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        style={{ display: "none" }}
+                        id="receipt-upload-input"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 800 * 1024) {
+                              alert("Kích thước file quá lớn! Vui lòng chọn file nhỏ hơn 800KB để đảm bảo đồng bộ dữ liệu tốt nhất.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              set("hoaDonThanhToanUrl", reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <label htmlFor="receipt-upload-input" className="btn btn-secondary btn-sm" style={{ cursor: "pointer", margin: 0 }}>
+                        Tải hóa đơn lên...
+                      </label>
+                      {data.hoaDonThanhToanUrl && (
+                        <>
+                          <span style={{ fontSize: 12, color: "var(--green)" }}>
+                            ✓ {data.hoaDonThanhToanUrl.startsWith("data:application/pdf") ? "Đã chọn file PDF" : "Đã chọn ảnh hóa đơn"}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: "var(--red)", padding: "4px 8px" }}
+                            onClick={() => set("hoaDonThanhToanUrl", undefined)}
+                          >
+                            Xóa hóa đơn
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="info-grid">
-                  <InfoItem label="Ngày đến" value={volunteer.ngayDen} />
-                  <InfoItem label="Ngày rời" value={volunteer.ngayRoi} />
+                  <InfoItem label="Ngày đến" value={formatDisplayDate(volunteer.ngayDen)} />
+                  <InfoItem label="Ngày rời" value={formatDisplayDate(volunteer.ngayRoi)} />
                   <InfoItem label="Chuyến bay đến" value={volunteer.thongTinChuyenBayDen} />
                   <InfoItem label="Chuyến bay về" value={volunteer.thongTinChuyenBayVe} />
                   <InfoItem label="Phương thức TT" value={volunteer.phuongThucThanhToan || "—"} />
@@ -561,7 +625,7 @@ export default function VolunteerDetailPage() {
                   <InfoItem label="Đã thanh toán" value={volunteer.daThanhToan ? "✓ Có" : "✗ Chưa"} />
                   
                   <div className="info-item" style={{ gridColumn: "1/-1", borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 6 }}>
-                    <div className="info-item-label" style={{ marginBottom: 6 }}>Vé máy bay</div>
+                    <div className="info-item-label" style={{ marginBottom: 6 }}>Vé máy bay (Ảnh / PDF)</div>
                     {volunteer.veMayBayUrl ? (
                       <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                         <div style={{
@@ -570,25 +634,37 @@ export default function VolunteerDetailPage() {
                           borderRadius: 6,
                           overflow: "hidden",
                           border: "1px solid var(--border)",
-                          background: "var(--bg-primary)",
-                          cursor: "zoom-in"
+                          background: "var(--bg-subtle)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}
                         onClick={() => window.open(volunteer.veMayBayUrl, "_blank")}
-                        title="Click để xem hình ảnh gốc"
+                        title={volunteer.veMayBayUrl.startsWith("data:application/pdf") ? "Click để mở PDF" : "Click để xem hình ảnh gốc"}
                         >
-                          <img 
-                            src={volunteer.veMayBayUrl} 
-                            alt="Vé máy bay" 
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                          />
+                          {volunteer.veMayBayUrl.startsWith("data:application/pdf") ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                              <span style={{ fontSize: 24 }}>📄</span>
+                              <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text-secondary)" }}>FILE PDF</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={volunteer.veMayBayUrl} 
+                              alt="Vé máy bay" 
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                            />
+                          )}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-                            Nhấp vào hình ảnh để xem kích thước đầy đủ trong tab mới.
+                            {volunteer.veMayBayUrl.startsWith("data:application/pdf") 
+                              ? "Nhấp vào tài liệu để mở file PDF trong tab mới." 
+                              : "Nhấp vào hình ảnh để xem kích thước đầy đủ trong tab mới."}
                           </span>
                           <a 
                             href={volunteer.veMayBayUrl} 
-                            download={`${volunteer.hoTen.toLowerCase().replace(/\s+/g, "_")}_ve_may_bay.jpg`}
+                            download={`${volunteer.hoTen.toLowerCase().replace(/\s+/g, "_")}_ve_may_bay.${volunteer.veMayBayUrl.startsWith("data:application/pdf") ? "pdf" : "jpg"}`}
                             className="btn btn-secondary btn-sm"
                             style={{ alignSelf: "flex-start", gap: 5, padding: "5px 10px", fontSize: 11.5, textDecoration: "none" }}
                           >
@@ -599,6 +675,61 @@ export default function VolunteerDetailPage() {
                     ) : (
                       <span style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>
                         Chưa tải lên vé máy bay
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="info-item" style={{ gridColumn: "1/-1", borderTop: "1px solid var(--border)", paddingTop: 14, marginTop: 6 }}>
+                    <div className="info-item-label" style={{ marginBottom: 6 }}>Hóa đơn đóng phí (Ảnh / PDF)</div>
+                    {volunteer.hoaDonThanhToanUrl ? (
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                        <div style={{
+                          width: 120,
+                          height: 80,
+                          borderRadius: 6,
+                          overflow: "hidden",
+                          border: "1px solid var(--border)",
+                          background: "var(--bg-subtle)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}
+                        onClick={() => window.open(volunteer.hoaDonThanhToanUrl, "_blank")}
+                        title={volunteer.hoaDonThanhToanUrl.startsWith("data:application/pdf") ? "Click để mở PDF" : "Click để xem hình ảnh gốc"}
+                        >
+                          {volunteer.hoaDonThanhToanUrl.startsWith("data:application/pdf") ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                              <span style={{ fontSize: 24 }}>📄</span>
+                              <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text-secondary)" }}>FILE PDF</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={volunteer.hoaDonThanhToanUrl} 
+                              alt="Hóa đơn đóng phí" 
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                            />
+                          )}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                            {volunteer.hoaDonThanhToanUrl.startsWith("data:application/pdf") 
+                              ? "Nhấp vào tài liệu để mở file PDF trong tab mới." 
+                              : "Nhấp vào hình ảnh để xem kích thước đầy đủ trong tab mới."}
+                          </span>
+                          <a 
+                            href={volunteer.hoaDonThanhToanUrl} 
+                            download={`${volunteer.hoTen.toLowerCase().replace(/\s+/g, "_")}_hoa_don.${volunteer.hoaDonThanhToanUrl.startsWith("data:application/pdf") ? "pdf" : "jpg"}`}
+                            className="btn btn-secondary btn-sm"
+                            style={{ alignSelf: "flex-start", gap: 5, padding: "5px 10px", fontSize: 11.5, textDecoration: "none" }}
+                          >
+                            <Download size={12} /> Tải xuống hóa đơn
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>
+                        Chưa tải lên hóa đơn đóng phí
                       </span>
                     )}
                   </div>

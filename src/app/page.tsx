@@ -820,80 +820,104 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Recent Volunteers */}
+            {/* Volunteer Directory - Visual Avatar Grid */}
             <div className="card animate-fade-in animate-delay-4" style={{ marginTop: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div className="section-title" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: "none" }}>
-                  Tình Nguyện Viên Mới Nhất
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <div className="section-title" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: "none" }}>
+                    👥 Thành Viên Khóa Tu
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>
+                    {activeVolunteers.length} tình nguyện viên đã đăng ký
+                  </p>
                 </div>
                 <Link href="/tinh-nguyen-vien" className="btn btn-ghost btn-sm">
-                  Xem tất cả →
+                  Quản lý danh sách →
                 </Link>
               </div>
-              <div style={{ overflowX: "auto" }}>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Tên</th>
-                      <th>Gia đình</th>
-                      <th>Nhiệm vụ</th>
-                      <th>Thanh toán</th>
-                      <th>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeVolunteers.slice(0, 5).map((v) => {
-                      const family = activeRetreat.families.find((f) => f.id === v.giaDinhPhapDam);
-                      return (
-                        <tr key={v.id}>
-                          <td>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div className="avatar" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                {v.avatarUrl ? (
-                                  <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                ) : (
-                                  v.hoTen.split(" ").pop()?.charAt(0) || "T"
-                                )}
-                              </div>
-                              <div>
-                                <Link href={`/tinh-nguyen-vien/${v.id}`} className="volunteer-name" style={{ textDecoration: "none" }}>
-                                  {v.hoTen}
-                                </Link>
-                                <span className="volunteer-email">{v.email}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            {family ? (
-                              <span className="filter-chip active" style={{
-                                background: family.bgColor, borderColor: family.color + "60",
-                                color: family.color, boxShadow: "none", padding: "3px 10px", fontSize: 12,
-                              }}>
-                                {family.emoji} {family.label}
-                              </span>
+
+              {activeVolunteers.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px 20px", color: "var(--text-muted)" }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🌿</div>
+                  <p style={{ fontSize: 13 }}>Chưa có tình nguyện viên nào</p>
+                </div>
+              ) : (
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
+                  gap: "16px 12px",
+                  padding: "4px 0",
+                }}>
+                  {activeVolunteers.map((v) => {
+                    const fam = activeRetreat.families.find((f) => f.id === v.giaDinhPhapDam);
+                    const statusDotColor = v.trangThai === "Đã duyệt"
+                      ? "var(--green)"
+                      : v.trangThai === "Từ chối"
+                      ? "var(--red)"
+                      : "var(--amber)";
+                    const initials = v.hoTen.split(" ").filter(Boolean).slice(-2).map((n: string) => n[0]).join("").toUpperCase();
+
+                    return (
+                      <Link
+                        key={v.id}
+                        href={`/tinh-nguyen-vien/${v.id}`}
+                        style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}
+                        title={`${v.hoTen} – ${v.trangThai}`}
+                      >
+                        <div style={{ position: "relative" }}>
+                          <div
+                            style={{
+                              width: 60, height: 60, borderRadius: "50%", overflow: "hidden",
+                              border: fam ? `3px solid ${fam.color}` : "3px solid var(--border)",
+                              background: fam ? fam.bgColor : "var(--accent-bg)",
+                              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.transform = "translateY(-3px) scale(1.05)";
+                              e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.14)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.transform = "none";
+                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)";
+                            }}
+                          >
+                            {v.avatarUrl && !v.avatarUrl.startsWith("data:application/pdf") ? (
+                              <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
-                              <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                              <span style={{ fontSize: 16, fontWeight: 800, color: fam ? fam.color : "var(--accent)", letterSpacing: "-0.02em" }}>
+                                {initials || "🌿"}
+                              </span>
                             )}
-                          </td>
-                          <td style={{ fontSize: 12.5 }}>
-                            {v.nhiemVu.length > 0 ? v.nhiemVu.join(", ") : <span style={{ color: "var(--text-muted)" }}>—</span>}
-                          </td>
-                          <td>
-                            <span className={`badge ${v.daThanhToan ? "badge-paid" : "badge-unpaid"}`}>
-                              {v.daThanhToan ? "✓ Đã TT" : "Chưa TT"}
-                            </span>
-                          </td>
-                          <td>
-                            <span className={`badge ${v.trangThai === "Đã duyệt" ? "badge-approved" : v.trangThai === "Từ chối" ? "badge-rejected" : "badge-pending"}`}>
-                              {v.trangThai}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                          <div style={{
+                            position: "absolute", bottom: 2, right: 2,
+                            width: 13, height: 13, borderRadius: "50%",
+                            background: statusDotColor,
+                            border: "2px solid var(--bg-surface)",
+                            boxShadow: `0 0 0 1px ${statusDotColor}40`,
+                          }} />
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{
+                            fontSize: 11.5, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3,
+                            maxWidth: 82, overflow: "hidden",
+                            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                          }}>
+                            {v.hoTen.split(" ").slice(-2).join(" ")}
+                          </div>
+                          {fam && (
+                            <div style={{ fontSize: 10, color: fam.color, marginTop: 2, fontWeight: 500 }}>
+                              {fam.emoji}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         )}

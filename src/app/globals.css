@@ -44,12 +44,12 @@
 }
 
 html.dark {
-  --bg-base:      #121810;
-  --bg-surface:   #1a2217;
-  --bg-subtle:    #222a1f;
-  --bg-muted:     #2a3527;
-  --border:       #2d3b2a;
-  --border-light: #233021;
+  --bg-base:      #000000;
+  --bg-surface:   #0d110c;
+  --bg-subtle:    #121811;
+  --bg-muted:     #182017;
+  --border:       #1d261b;
+  --border-light: #172016;
 
   --text-primary:   #f5f2ee;
   --text-secondary: #c5beb4;
@@ -57,15 +57,15 @@ html.dark {
 
   --accent:      #52b747;
   --accent-mid:  #63d158;
-  --accent-bg:   #1a2a18;
+  --accent-bg:   #101c0f;
   --accent-glow: rgba(82, 183, 71, 0.15);
 
   --green:    #4ade80;  --green-bg:  rgba(74, 222, 128, 0.12);
   --amber:    #fb923c;  --amber-bg:  rgba(251, 146, 60, 0.12);
   --red:      #f87171;  --red-bg:    rgba(248, 113, 113, 0.12);
   --blue:     #60a5fa;  --blue-bg:   rgba(96, 165, 250, 0.12);
-  --bg-surface-translucent: rgba(26, 34, 23, 0.85);
-  --border-translucent: rgba(0, 0, 0, 0.25);
+  --bg-surface-translucent: rgba(13, 17, 12, 0.85);
+  --border-translucent: rgba(0, 0, 0, 0.35);
 }
 
 html {
@@ -578,7 +578,7 @@ input, select, textarea { font-family: inherit; }
 }
 @media (min-width: 768px) {
   .mobile-only {
-    display: none;
+    display: none !important;
   }
   .desktop-only-block {
     display: block;

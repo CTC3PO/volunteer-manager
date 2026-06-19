@@ -147,7 +147,7 @@ export default function CaiDatPage() {
 
   // Reset all data to initial defaults
   const handleResetData = () => {
-    if (confirm("CẢNH BÁO: Hành động này sẽ xóa toàn bộ các khóa tu và tình nguyện viên tự tạo, đưa ứng dụng về trạng thái mặc định ban đầu. Bạn có chắc chắn muốn thực hiện?")) {
+    if (true) {
       localStorage.removeItem("tnv-manager-volunteers");
       window.location.href = "/";
     }
