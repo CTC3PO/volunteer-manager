@@ -348,6 +348,7 @@ export default function VolunteersPage() {
   const [filterFamily, setFilterFamily] = useState("all");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
 
   // Bulk Email modal state
   const [showEmailCenter, setShowEmailCenter] = useState(false);
@@ -662,108 +663,170 @@ export default function VolunteersPage() {
 
             {/* Mobile Cards View */}
             <div className="mobile-only" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {filtered.map(v => (
-                <div key={v.id} style={{
-                  background: T.surface,
-                  border: `1px solid ${T.border}`,
-                  borderRadius: 12,
-                  padding: 16,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                  boxShadow: "var(--shadow-sm)",
-                }}>
-                  {/* Top Header details */}
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggleSelect(v.id)}
-                      style={{ accentColor: T.accent, cursor: "pointer", marginTop: 10 }} />
-                    <div style={{
-                      width: 36, height: 36, borderRadius: "50%",
-                      background: T.accentBg, color: T.accent,
-                      fontSize: 13, fontWeight: 700, flexShrink: 0,
-                      border: `1.5px solid ${T.border}`,
-                      display: "flex", alignContent: "center", justifyContent: "center",
-                      alignItems: "center", overflow: "hidden",
-                    }}>
-                      {v.avatarUrl ? (
-                        <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        v.hoTen.split(" ").pop()?.charAt(0) || "T"
-                      )}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Link href={`/tinh-nguyen-vien/${v.id}`} style={{
-                        fontWeight: 600, color: T.text, display: "block",
-                        textDecoration: "none", fontSize: 14,
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
-                      }}>
-                        {v.hoTen}
-                      </Link>
-                      <div style={{ fontSize: 11.5, color: T.textMut, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {v.email}
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                      <StatusCell volunteerId={v.id} value={v.trangThai} />
-                    </div>
-                  </div>
-
-                  {/* Details block inside Card */}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "10px 14px",
-                    background: T.subtle,
-                    padding: 12,
-                    borderRadius: 8,
-                    fontSize: 12,
-                    border: `1px solid ${T.borderLight}`
+              {filtered.map(v => {
+                const isExpanded = expandedCardIds.has(v.id);
+                return (
+                  <div key={v.id} style={{
+                    background: T.surface,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 12,
+                    padding: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: isExpanded ? 12 : 0,
+                    boxShadow: "var(--shadow-sm)",
+                    transition: "all 0.2s ease-in-out",
                   }}>
-                    <div>
-                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Khóa tu
+                    {/* Top Header details */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+                      <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggleSelect(v.id)}
+                        style={{ accentColor: T.accent, cursor: "pointer", flexShrink: 0 }} />
+                      
+                      {/* Clickable Middle Section to expand */}
+                      <div 
+                        onClick={() => {
+                          setExpandedCardIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(v.id)) {
+                              next.delete(v.id);
+                            } else {
+                              next.add(v.id);
+                            }
+                            return next;
+                          });
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          flex: 1,
+                          cursor: "pointer",
+                          minWidth: 0,
+                          padding: "4px 0",
+                        }}
+                      >
+                        <div style={{
+                          width: 36, height: 36, borderRadius: "50%",
+                          background: T.accentBg, color: T.accent,
+                          fontSize: 13, fontWeight: 700, flexShrink: 0,
+                          border: `1.5px solid ${T.border}`,
+                          display: "flex", alignContent: "center", justifyContent: "center",
+                          alignItems: "center", overflow: "hidden",
+                        }}>
+                          {v.avatarUrl ? (
+                            <img src={v.avatarUrl} alt={v.hoTen} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            v.hoTen.split(" ").pop()?.charAt(0) || "T"
+                          )}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{
+                            fontWeight: 600, color: T.text, display: "block",
+                            fontSize: 14,
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                          }}>
+                            {v.hoTen}
+                          </span>
+                          <div style={{ fontSize: 11.5, color: T.textMut, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {v.email}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ color: T.textSec, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {retreats.find(r => r.id === v.retreatId)?.ten || "—"}
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        <StatusCell volunteerId={v.id} value={v.trangThai} />
+                        <button
+                          onClick={() => {
+                            setExpandedCardIds(prev => {
+                              const next = new Set(prev);
+                              if (next.has(v.id)) {
+                                next.delete(v.id);
+                              } else {
+                                next.add(v.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: "6px 2px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "var(--text-muted)",
+                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s ease",
+                          }}
+                          title={isExpanded ? "Thu gọn" : "Xem chi tiết"}
+                        >
+                          <ChevronDown size={16} />
+                        </button>
                       </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Ngày đến/về
+
+                    {/* Details block inside Card */}
+                    {isExpanded && (
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "10px 14px",
+                        background: T.subtle,
+                        padding: 12,
+                        borderRadius: 8,
+                        fontSize: 12,
+                        border: `1px solid ${T.borderLight}`,
+                        animation: "fadeUp 0.2s ease both",
+                        marginTop: 4,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            Khóa tu
+                          </div>
+                          <div style={{ color: T.textSec, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {retreats.find(r => r.id === v.retreatId)?.ten || "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            Ngày đến/về
+                          </div>
+                          <div style={{ color: T.textSec }}>
+                            {v.ngayDen ? new Date(v.ngayDen).toLocaleDateString("vi-VN") : "—"}
+                            <span style={{ color: T.textMut, margin: "0 4px" }}>→</span>
+                            {v.ngayRoi ? new Date(v.ngayRoi).toLocaleDateString("vi-VN") : "—"}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            Gia đình
+                          </div>
+                          <FamilyCell volunteerId={v.id} value={v.giaDinhPhapDam} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            Nhiệm vụ
+                          </div>
+                          <TaskCell volunteerId={v.id} value={v.nhiemVu} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            Phòng
+                          </div>
+                          <RoomCell volunteerId={v.id} value={v.phong} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                            Thanh toán
+                          </div>
+                          <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
+                        </div>
                       </div>
-                      <div style={{ color: T.textSec }}>
-                        {v.ngayDen ? new Date(v.ngayDen).toLocaleDateString("vi-VN") : "—"}
-                        <span style={{ color: T.textMut, margin: "0 4px" }}>→</span>
-                        {v.ngayRoi ? new Date(v.ngayRoi).toLocaleDateString("vi-VN") : "—"}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Gia đình
-                      </div>
-                      <FamilyCell volunteerId={v.id} value={v.giaDinhPhapDam} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Nhiệm vụ
-                      </div>
-                      <TaskCell volunteerId={v.id} value={v.nhiemVu} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Phòng
-                      </div>
-                      <RoomCell volunteerId={v.id} value={v.phong} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Thanh toán
-                      </div>
-                      <PaymentCell volunteerId={v.id} paid={v.daThanhToan} method={v.phuongThucThanhToan || ""} />
-                    </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
