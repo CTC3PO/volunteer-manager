@@ -164,7 +164,7 @@ export default function BaoCaoTongKetPage() {
         </div>
 
         {/* Section 2: Family distribution */}
-        <div className="doc-section page-break-inside-avoid">
+        <div className="doc-section">
           <h3 className="section-heading"><Award size={16} /> 2. Phân Bổ Theo Gia Đình Pháp Đàm</h3>
           
           {familyList.map((f) => (
@@ -235,7 +235,7 @@ export default function BaoCaoTongKetPage() {
         </div>
 
         {/* Section 3: Task breakdown */}
-        <div className="doc-section page-break-before">
+        <div className="doc-section page-break-inside-avoid">
           <h3 className="section-heading"><Award size={16} /> 3. Phân Phối Nhân Sự Theo Nhiệm Vụ</h3>
           
           <table className="report-table">
@@ -567,13 +567,19 @@ export default function BaoCaoTongKetPage() {
             page-break-before: always;
             break-before: page;
           }
-          .page-break-inside-avoid {
+          .page-break-inside-avoid,
+          .report-group-container,
+          .report-table,
+          tr {
             page-break-inside: avoid;
             break-inside: avoid;
           }
+          thead {
+            display: table-header-group;
+          }
           @page {
             size: A4 portrait;
-            margin: 2cm;
+            margin: 1.5cm;
           }
         }
       `}</style>

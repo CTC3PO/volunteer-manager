@@ -62,7 +62,7 @@ export default function CaiDatPage() {
             const match = cleanInput.match(regex);
             return match ? match[1] : "";
           };
-          
+
           parsedConfig = {
             apiKey: extractField("apiKey"),
             authDomain: extractField("authDomain"),
@@ -244,7 +244,7 @@ export default function CaiDatPage() {
                     onClick={handlePushToCloud}
                     style={{ gap: 6 }}
                   >
-                    <Cloud size={14} /> 
+                    <Cloud size={14} />
                     {syncStatus === "syncing" ? "Đang đồng bộ..." : "Đẩy dữ liệu hiện tại lên Cloud"}
                   </button>
                   <button
@@ -301,7 +301,7 @@ export default function CaiDatPage() {
             <p style={{ fontSize: 12.5, color: "var(--text-muted)", marginBottom: 16 }}>
               Soạn nội dung email mẫu. Nội dung này sẽ tự động điền khi bạn nhấn nút gửi mail cho tình nguyện viên từ trang hồ sơ.
             </p>
-            
+
             <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Nội dung Email mẫu</label>
               <textarea

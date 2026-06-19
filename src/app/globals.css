@@ -615,3 +615,40 @@ input, select, textarea { font-family: inherit; }
   .page-body { padding: 24px 40px; max-width: 1280px; }
   .bottom-nav-item { max-width: 120px; }
 }
+
+/* CSV Import Preview Header - Mobile First */
+.import-preview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.import-preview-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.import-preview-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .import-preview-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .import-preview-actions {
+    width: auto;
+  }
+  
+  .import-preview-actions .btn {
+    flex: none;
+  }
+}

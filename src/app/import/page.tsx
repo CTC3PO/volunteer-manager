@@ -159,17 +159,17 @@ export default function ImportPage() {
 
         {state === "preview" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FileText size={18} color="var(--accent)" />
-                <div>
-                  <p style={{ fontWeight: 700, color: "var(--text-primary)" }}>{fileName}</p>
+            <div className="import-preview-header">
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, width: "100%" }}>
+                <FileText size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontWeight: 700, color: "var(--text-primary)", wordBreak: "break-all" }}>{fileName}</p>
                   <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
                     Tìm thấy <strong style={{ color: "var(--accent)" }}>{preview.length} TNV</strong> — kiểm tra trước khi import vào <strong>{activeRetreat.ten}</strong>
                   </p>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
+              <div className="import-preview-actions">
                 <button className="btn btn-ghost" onClick={handleReset}>
                   <X size={15} /> Hủy
                 </button>
