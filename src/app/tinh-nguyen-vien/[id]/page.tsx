@@ -6,7 +6,8 @@ import { useVolunteerStore } from "@/shared/lib/store";
 import { Volunteer } from "@/shared/types/volunteer";
 import {
   ArrowLeft, Edit2, Save, X, CheckCircle, Clock, XCircle, Trash2,
-  Phone, Mail, MapPin, Shield, Heart, BookOpen, Users, Briefcase, Download, Printer
+  Phone, Mail, MapPin, Shield, Heart, BookOpen, Users, Briefcase, Download, Printer,
+  Eye, EyeOff, ChevronDown, ChevronUp
 } from "lucide-react";
 
 type Tab = "ho-so" | "phan-cong" | "suc-khoe" | "tam-linh";
@@ -53,6 +54,8 @@ export default function VolunteerDetailPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Volunteer>>(volunteer || {});
   const [saved, setSaved] = useState(false);
+  const [showPassport, setShowPassport] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   if (!volunteer) {
     return (
@@ -81,6 +84,7 @@ export default function VolunteerDetailPage() {
   const handleCancel = () => {
     setForm(volunteer);
     setEditing(false);
+    setShowMore(false);
   };
 
   const handleDelete = () => {
@@ -227,7 +231,7 @@ export default function VolunteerDetailPage() {
                 >
                   <Mail size={14} /> Gửi Email
                 </button>
-                <button className="btn btn-secondary" onClick={() => setEditing(true)}>
+                <button className="btn btn-secondary" onClick={() => { setEditing(true); setShowMore(true); }}>
                   <Edit2 size={15} /> Chỉnh sửa
                 </button>
                 <Link
@@ -254,8 +258,11 @@ export default function VolunteerDetailPage() {
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-secondary)" }}>
             <MapPin size={13} /> {volunteer.diaChi.thanhPho}, {volunteer.diaChi.quocGia}
           </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-secondary)" }}>
-            <Shield size={13} /> HC: {volunteer.soHoChieu}
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-secondary)", cursor: "pointer" }}
+            onClick={() => setShowPassport((p) => !p)} title={showPassport ? "Ẩn số hộ chiếu" : "Hiện số hộ chiếu"}
+          >
+            <Shield size={13} /> HC: {showPassport ? volunteer.soHoChieu || "—" : "••••••"}
+            {showPassport ? <EyeOff size={11} /> : <Eye size={11} />}
           </span>
         </div>
       </div>
@@ -367,9 +374,24 @@ export default function VolunteerDetailPage() {
 
             {/* Passport */}
             <div className="card">
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                Hộ Chiếu
-              </h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", margin: 0, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                  🛂 Hộ Chiếu
+                </h3>
+                {!editing && (
+                  <button
+                    onClick={() => setShowPassport((p) => !p)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      background: "var(--bg-secondary)", border: "1px solid var(--border)",
+                      borderRadius: 20, padding: "4px 12px", fontSize: 12,
+                      color: "var(--text-secondary)", cursor: "pointer", fontWeight: 500,
+                    }}
+                  >
+                    {showPassport ? <><EyeOff size={12} /> Ẩn</> : <><Eye size={12} /> Hiện</>}
+                  </button>
+                )}
+              </div>
               {editing ? (
                 <div className="info-grid">
                   <div className="form-group">
@@ -383,7 +405,14 @@ export default function VolunteerDetailPage() {
                 </div>
               ) : (
                 <div className="info-grid">
-                  <InfoItem label="Số hộ chiếu" value={volunteer.soHoChieu} />
+                  <div className="info-item">
+                    <div className="info-item-label">Số hộ chiếu</div>
+                    <div className="info-item-value" style={{ display: "flex", alignItems: "center", gap: 8, letterSpacing: showPassport ? "0.05em" : "0.15em", fontFamily: showPassport ? "inherit" : "monospace" }}>
+                      {volunteer.soHoChieu
+                        ? showPassport ? volunteer.soHoChieu : volunteer.soHoChieu.replace(/./g, "•")
+                        : <span className="empty">—</span>}
+                    </div>
+                  </div>
                   <InfoItem label="Thời hạn" value={volunteer.thoiHanHoChieu} />
                 </div>
               )}
@@ -414,10 +443,30 @@ export default function VolunteerDetailPage() {
               )}
             </div>
 
+            {/* Collapsible More Details */}
+            {!editing && (
+              <button
+                onClick={() => setShowMore((p) => !p)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  width: "100%", padding: "10px", borderRadius: 10,
+                  background: "var(--bg-secondary)", border: "1px dashed var(--border)",
+                  color: "var(--text-secondary)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+              >
+                {showMore ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                {showMore ? "Thu gọn thông tin" : "Xem thêm chi tiết (Địa chỉ, Liên hệ khẩn cấp)"}
+              </button>
+            )}
+
             {/* Address */}
+            {(editing || showMore) && (
             <div className="card">
               <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                Địa Chỉ Thường Trú
+                📍 Địa Chỉ Thường Trú
               </h3>
               {editing ? (
                 <div className="info-grid">
@@ -451,11 +500,13 @@ export default function VolunteerDetailPage() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Emergency contact */}
+            {(editing || showMore) && (
             <div className="card">
               <h3 style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                Liên Hệ Khẩn Cấp
+                🆘 Liên Hệ Khẩn Cấp
               </h3>
               <div className="info-grid">
                 <InfoItem label="Họ tên" value={volunteer.lienHeKhanCap.hoTen} />
@@ -463,6 +514,7 @@ export default function VolunteerDetailPage() {
                 <InfoItem label="Số điện thoại" value={volunteer.lienHeKhanCap.soDienThoai} />
               </div>
             </div>
+            )}
 
             {/* Flight & payment */}
             <div className="card">
