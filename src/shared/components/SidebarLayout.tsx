@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Home, Users, Upload, Settings, LogOut } from "lucide-react";
-import { useVolunteerStore, startFirebaseSync, stopFirebaseSync } from "@/shared/lib/store";
+import { useVolunteerStore, startFirebaseSync, stopFirebaseSync, getEffectiveConfig } from "@/shared/lib/store";
 import { LoginPage } from "@/shared/components/LoginPage";
 
 const NAV = [
@@ -54,8 +54,9 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
 
   // Firebase Realtime Sync Effect
   useEffect(() => {
-    if (firebaseConfig) {
-      startFirebaseSync(firebaseConfig);
+    const effectiveConfig = getEffectiveConfig(firebaseConfig);
+    if (effectiveConfig) {
+      startFirebaseSync(effectiveConfig);
     } else {
       stopFirebaseSync();
     }

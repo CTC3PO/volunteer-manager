@@ -56,9 +56,34 @@ const initialRetreats: Retreat[] = [
   }
 ];
 
+const getEnvFirebaseConfig = () => {
+  if (
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  ) {
+    return {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
+  }
+  return null;
+};
+
+export const getEffectiveConfig = (stateConfig: any) => {
+  if (stateConfig && stateConfig.apiKey && stateConfig.projectId) {
+    return stateConfig;
+  }
+  return getEnvFirebaseConfig();
+};
+
 // Firebase Firestore write helpers
 const dbWriteVolunteer = async (v: Volunteer, config: any) => {
-  const db = getFirebaseDb(config);
+  const effective = getEffectiveConfig(config);
+  const db = getFirebaseDb(effective);
   if (db) {
     try {
       await setDoc(doc(db, "volunteers", v.id), v);
@@ -69,7 +94,8 @@ const dbWriteVolunteer = async (v: Volunteer, config: any) => {
 };
 
 const dbDeleteVolunteer = async (id: string, config: any) => {
-  const db = getFirebaseDb(config);
+  const effective = getEffectiveConfig(config);
+  const db = getFirebaseDb(effective);
   if (db) {
     try {
       await deleteDoc(doc(db, "volunteers", id));
@@ -80,7 +106,8 @@ const dbDeleteVolunteer = async (id: string, config: any) => {
 };
 
 const dbWriteRetreat = async (r: Retreat, config: any) => {
-  const db = getFirebaseDb(config);
+  const effective = getEffectiveConfig(config);
+  const db = getFirebaseDb(effective);
   if (db) {
     try {
       await setDoc(doc(db, "retreats", r.id), r);
@@ -91,7 +118,8 @@ const dbWriteRetreat = async (r: Retreat, config: any) => {
 };
 
 const dbDeleteRetreat = async (id: string, config: any) => {
-  const db = getFirebaseDb(config);
+  const effective = getEffectiveConfig(config);
+  const db = getFirebaseDb(effective);
   if (db) {
     try {
       await deleteDoc(doc(db, "retreats", id));
@@ -386,6 +414,8 @@ export const useVolunteerStore = create<VolunteerStore>()(
 // Realtime Firebase listeners
 let unsubRetreats: (() => void) | null = null;
 let unsubVolunteers: (() => void) | null = null;
+let isInitialRetreatsLoad = true;
+let isInitialVolunteersLoad = true;
 
 export const startFirebaseSync = (config: any) => {
   const db = getFirebaseDb(config);
@@ -394,6 +424,9 @@ export const startFirebaseSync = (config: any) => {
   // Clear previous sub subscriptions
   if (unsubRetreats) unsubRetreats();
   if (unsubVolunteers) unsubVolunteers();
+  
+  isInitialRetreatsLoad = true;
+  isInitialVolunteersLoad = true;
 
   // Listen to retreats
   unsubRetreats = onSnapshot(collection(db, "retreats"), (snapshot) => {
@@ -401,7 +434,11 @@ export const startFirebaseSync = (config: any) => {
     snapshot.forEach((doc) => {
       retreatsList.push(doc.data() as Retreat);
     });
-    if (retreatsList.length > 0) {
+    
+    const isInitial = isInitialRetreatsLoad;
+    isInitialRetreatsLoad = false;
+    
+    if (retreatsList.length > 0 || (snapshot.size === 0 && !isInitial && useVolunteerStore.getState().retreats.length > 0)) {
       useVolunteerStore.setState({ retreats: retreatsList });
     }
   });
@@ -416,7 +453,11 @@ export const startFirebaseSync = (config: any) => {
         volunteersList.push(data);
       }
     });
-    if (volunteersList.length > 0 || (snapshot.size === 0 && useVolunteerStore.getState().volunteers.length > 0)) {
+    
+    const isInitial = isInitialVolunteersLoad;
+    isInitialVolunteersLoad = false;
+    
+    if (volunteersList.length > 0 || (snapshot.size === 0 && !isInitial && useVolunteerStore.getState().volunteers.length > 0)) {
       useVolunteerStore.setState({ volunteers: volunteersList });
     }
   });

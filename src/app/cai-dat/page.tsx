@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useVolunteerStore } from "@/shared/lib/store";
-import { getFirebaseDb, syncLocalToFirestore } from "@/shared/lib/firebase";
+import { useVolunteerStore, getEffectiveConfig } from "@/shared/lib/store";
+import { getFirebaseDb, syncLocalToFirestore, testFirebaseConnection } from "@/shared/lib/firebase";
 import {
   Save, CheckCircle, Moon, Sun, Trash2, Mail, FileJson,
   Database, Wifi, Cloud, AlertTriangle, ShieldCheck
@@ -27,11 +27,26 @@ export default function CaiDatPage() {
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState("");
   const [storageSize, setStorageSize] = useState("0 KB");
+  const [effectiveConfig, setEffectiveConfig] = useState<any>(null);
+  const [isEnvConfig, setIsEnvConfig] = useState(false);
+  const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [testError, setTestError] = useState("");
 
   // Sync state
   useEffect(() => {
     setLocalTemplate(emailTemplate);
   }, [emailTemplate]);
+
+  // Compute effective config
+  useEffect(() => {
+    const config = getEffectiveConfig(firebaseConfig);
+    setEffectiveConfig(config);
+    if (!firebaseConfig && config) {
+      setIsEnvConfig(true);
+    } else {
+      setIsEnvConfig(false);
+    }
+  }, [firebaseConfig]);
 
   // Compute storage size
   useEffect(() => {
@@ -92,12 +107,12 @@ export default function CaiDatPage() {
 
   // Push local data to Firestore
   const handlePushToCloud = async () => {
-    if (!firebaseConfig) {
+    if (!effectiveConfig) {
       alert("Vui lòng kết nối Firebase trước khi đẩy dữ liệu.");
       return;
     }
 
-    const db = getFirebaseDb(firebaseConfig);
+    const db = getFirebaseDb(effectiveConfig);
     if (!db) {
       alert("Không thể khởi tạo kết nối database. Vui lòng kiểm tra lại cấu hình.");
       return;
@@ -211,9 +226,9 @@ export default function CaiDatPage() {
               <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
                 🔥 Cơ Sở Dữ Liệu Cloud (Firebase Firestore)
               </h3>
-              {firebaseConfig ? (
+              {effectiveConfig ? (
                 <span className="badge badge-approved" style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px" }}>
-                  <Wifi size={11} /> Cloud Active
+                  <Wifi size={11} /> Cloud Active {isEnvConfig ? "(Biến môi trường)" : ""}
                 </span>
               ) : (
                 <span className="badge badge-pending" style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px" }}>
@@ -225,11 +240,11 @@ export default function CaiDatPage() {
               Lưu trữ và đồng bộ hóa thời gian thực lên đám mây. Đồng nghiệp của bạn có thể cùng lúc truy cập, chỉnh sửa, và theo dõi dữ liệu TNV.
             </p>
 
-            {firebaseConfig ? (
+            {effectiveConfig ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div style={{ background: "var(--bg-secondary)", padding: 14, borderRadius: 8, fontSize: 13, borderLeft: "3px solid var(--accent)" }}>
                   <p style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
-                    ✅ Đang kết nối tới dự án: <code>{firebaseConfig.projectId}</code>
+                    ✅ Đang kết nối tới dự án: <code>{effectiveConfig.projectId}</code>
                   </p>
                   <p style={{ color: "var(--text-secondary)", fontSize: 12 }}>
                     Tất cả các thay đổi về hồ sơ TNV và phân công gia đình sẽ tự động đồng bộ thời gian thực.
@@ -237,6 +252,32 @@ export default function CaiDatPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={testStatus === "testing"}
+                    onClick={async () => {
+                      setTestStatus("testing");
+                      const db = getFirebaseDb(effectiveConfig);
+                      if (db) {
+                        const res = await testFirebaseConnection(db);
+                        if (res.success) {
+                          setTestStatus("success");
+                        } else {
+                          setTestStatus("error");
+                          setTestError(res.error || "Lỗi không xác định");
+                        }
+                      } else {
+                        setTestStatus("error");
+                        setTestError("Không thể khởi tạo DB");
+                      }
+                      setTimeout(() => setTestStatus("idle"), 4000);
+                    }}
+                    style={{ gap: 6 }}
+                  >
+                    <Wifi size={14} />
+                    {testStatus === "testing" ? "Đang kiểm tra..." : "Kiểm tra kết nối"}
+                  </button>
                   <button
                     type="button"
                     className="btn btn-primary"
@@ -255,11 +296,23 @@ export default function CaiDatPage() {
                       background: "rgba(239, 68, 68, 0.08)",
                       color: "var(--red)",
                       border: "1px solid rgba(239, 68, 68, 0.25)",
+                      display: isEnvConfig ? "none" : "flex",
                     }}
                   >
                     Ngắt kết nối Cloud
                   </button>
                 </div>
+
+                {testStatus === "success" && (
+                  <p style={{ color: "var(--green)", fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                    <ShieldCheck size={14} /> Kết nối thành công! Firebase rules đã hợp lệ.
+                  </p>
+                )}
+                {testStatus === "error" && (
+                  <p style={{ color: "var(--red)", fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                    <AlertTriangle size={14} /> Lỗi kết nối: {testError}
+                  </p>
+                )}
 
                 {syncStatus === "success" && (
                   <p style={{ color: "var(--green)", fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
