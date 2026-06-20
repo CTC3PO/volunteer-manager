@@ -197,9 +197,7 @@ export const useVolunteerStore = create<VolunteerStore>()(
           deletedVolunteerIds: (state.deletedVolunteerIds || []).filter((id) => !ids.includes(id)),
         }));
         const config = get().firebaseConfig;
-        if (config) {
-          vs.forEach((v) => dbWriteVolunteer(v, config));
-        }
+        vs.forEach((v) => dbWriteVolunteer(v, config));
       },
 
       updateVolunteer: (id, updates) => {
