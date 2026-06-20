@@ -438,7 +438,11 @@ export const startFirebaseSync = (config: any) => {
     const isInitial = isInitialRetreatsLoad;
     isInitialRetreatsLoad = false;
     
-    if (retreatsList.length > 0 || (snapshot.size === 0 && !isInitial && useVolunteerStore.getState().retreats.length > 0)) {
+    if (isInitial && snapshot.size === 0) {
+      // Firebase is empty, seed it with our local state so we don't lose it
+      const localRetreats = useVolunteerStore.getState().retreats;
+      localRetreats.forEach((r) => dbWriteRetreat(r, config));
+    } else {
       useVolunteerStore.setState({ retreats: retreatsList });
     }
   });
@@ -457,7 +461,11 @@ export const startFirebaseSync = (config: any) => {
     const isInitial = isInitialVolunteersLoad;
     isInitialVolunteersLoad = false;
     
-    if (volunteersList.length > 0 || (snapshot.size === 0 && !isInitial && useVolunteerStore.getState().volunteers.length > 0)) {
+    if (isInitial && snapshot.size === 0) {
+      // Firebase is empty, seed it with our local state so we don't lose it
+      const localVolunteers = useVolunteerStore.getState().volunteers;
+      localVolunteers.forEach((v) => dbWriteVolunteer(v, config));
+    } else {
       useVolunteerStore.setState({ volunteers: volunteersList });
     }
   });
