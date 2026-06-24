@@ -41,7 +41,7 @@ export default function InHoSoTNVPage() {
       <div style={{ padding: 40, textAlign: "center" }}>
         <h3>Không tìm thấy tình nguyện viên</h3>
         <p>Hồ sơ tình nguyện viên này không tồn tại hoặc đã bị xóa.</p>
-        <Link href="/tinh-nguyen-vien" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+        <Link href="/admin/tinh-nguyen-vien" style={{ color: "var(--accent)", textDecoration: "underline" }}>
           Về danh sách
         </Link>
       </div>

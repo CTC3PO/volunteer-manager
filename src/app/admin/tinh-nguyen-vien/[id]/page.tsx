@@ -63,7 +63,7 @@ export default function VolunteerDetailPage() {
         <div className="empty-state">
           <h3>Không tìm thấy TNV</h3>
           <p>Hồ sơ này không tồn tại hoặc đã bị xóa khỏi hệ thống.</p>
-          <Link href="/tinh-nguyen-vien" className="btn btn-secondary" style={{ marginTop: 12 }}>
+          <Link href="/admin/tinh-nguyen-vien" className="btn btn-secondary" style={{ marginTop: 12 }}>
             ← Quay lại danh sách
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default function VolunteerDetailPage() {
   const handleDelete = () => {
     if (confirm(`Bạn có chắc chắn muốn xóa hồ sơ của tình nguyện viên "${volunteer.hoTen}" khỏi hệ thống?`)) {
       deleteVolunteer(volunteer.id);
-      router.push("/tinh-nguyen-vien");
+      router.push("/admin/tinh-nguyen-vien");
     }
   };
 
@@ -142,7 +142,7 @@ export default function VolunteerDetailPage() {
       <div className="page-header">
         <div className="page-header-flex">
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link href="/tinh-nguyen-vien" className="btn btn-ghost btn-sm">
+            <Link href="/admin/tinh-nguyen-vien" className="btn btn-ghost btn-sm">
               <ArrowLeft size={15} />
             </Link>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

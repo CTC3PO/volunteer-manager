@@ -192,12 +192,18 @@ export const useVolunteerStore = create<VolunteerStore>()(
 
       addVolunteers: (vs) => {
         const ids = vs.map((v) => v.id);
+        // Mark IDs as pending BEFORE writing so the snapshot listener
+        // doesn't overwrite them while writes are in flight
+        ids.forEach((id) => pendingWriteIds.add(id));
         set((state) => ({
           volunteers: [...state.volunteers, ...vs],
           deletedVolunteerIds: (state.deletedVolunteerIds || []).filter((id) => !ids.includes(id)),
         }));
         const config = get().firebaseConfig;
-        vs.forEach((v) => dbWriteVolunteer(v, config));
+        // Write all to Firestore, then clear pending flags
+        Promise.all(vs.map((v) => dbWriteVolunteer(v, config))).finally(() => {
+          ids.forEach((id) => pendingWriteIds.delete(id));
+        });
       },
 
       updateVolunteer: (id, updates) => {
@@ -415,6 +421,11 @@ let unsubVolunteers: (() => void) | null = null;
 let isInitialRetreatsLoad = true;
 let isInitialVolunteersLoad = true;
 
+// Track volunteer IDs currently being written to Firestore.
+// Prevents the onSnapshot listener from overwriting local state
+// before the async Firestore writes complete (A0 sync fix).
+const pendingWriteIds = new Set<string>();
+
 export const startFirebaseSync = (config: any) => {
   const db = getFirebaseDb(config);
   if (!db) return;
@@ -510,8 +521,11 @@ export const startFirebaseSync = (config: any) => {
         }
       } else {
         // Missing locally, add to local
-        mergedVolunteers.push(rv);
-        hasChanges = true;
+        // But skip if it's pending a write from our own addVolunteers call
+        if (!pendingWriteIds.has(rv.id)) {
+          mergedVolunteers.push(rv);
+          hasChanges = true;
+        }
       }
     });
 

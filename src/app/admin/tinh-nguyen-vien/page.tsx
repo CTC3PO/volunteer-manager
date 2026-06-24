@@ -476,7 +476,7 @@ export default function VolunteersPage() {
             >
               <Trash2 size={13} /> Xóa {selected.size > 0 ? `(${selected.size})` : ""}
             </button>
-            <Link href="/tinh-nguyen-vien/moi" style={{
+            <Link href="/admin/tinh-nguyen-vien/moi" style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               padding: "7px 14px", borderRadius: 999, border: "none",
               background: T.accent, color: "#fff", fontSize: 12.5, fontWeight: 600,

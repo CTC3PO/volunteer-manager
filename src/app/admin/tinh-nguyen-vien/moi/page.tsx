@@ -67,7 +67,7 @@ export default function NewVolunteerPage() {
     <div className="animate-fade-in" style={{ paddingBottom: 40 }}>
       <div className="page-header">
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Link href="/tinh-nguyen-vien" className="btn btn-ghost btn-sm">
+          <Link href="/admin/tinh-nguyen-vien" className="btn btn-ghost btn-sm">
             <ArrowLeft size={15} />
           </Link>
           <div>
@@ -261,7 +261,7 @@ export default function NewVolunteerPage() {
             </div>
 
             <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-              <Link href="/tinh-nguyen-vien" className="btn btn-ghost">Hủy</Link>
+              <Link href="/admin/tinh-nguyen-vien" className="btn btn-ghost">Hủy</Link>
               <button type="submit" className="btn btn-primary">
                 <Save size={15} />
                 Tạo hồ sơ TNV

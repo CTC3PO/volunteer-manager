@@ -1,20 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { SidebarLayout } from "@/shared/components/SidebarLayout";
 
 export const metadata: Metadata = {
-  title: "TNV Manager – Quản Lý Tình Nguyện Viên",
-  description: "Hệ thống quản lý tình nguyện viên cho khóa tu – Tu viện Vườn Ươm, Làng Mai Thái Lan",
+  title: "Chương Trình Tình Nguyện Viên – Tu viện Vườn Ươm",
+  description: "Volunteer Program – Tu viện Vườn Ươm, Làng Mai Thái Lan. Chương trình tình nguyện viên khóa tu.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "TNV Manager",
+    title: "Vườn Ươm Volunteers",
     statusBarStyle: "default",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5f2ee",
+  themeColor: "#2d5a27",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -27,12 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body>
-        <SidebarLayout>{children}</SidebarLayout>
+        {children}
       </body>
     </html>
   );

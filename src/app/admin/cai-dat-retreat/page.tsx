@@ -110,14 +110,14 @@ function RetreatConfigContent() {
     setSaved(true);
     setTimeout(() => {
       setSaved(false);
-      router.push("/");
+      router.push("/admin");
     }, 1200);
   };
 
   const handleDeleteRetreat = () => {
     if (confirm(`Bạn có chắc chắn muốn xóa khóa tu "${activeRetreat.ten}"? Tất cả hồ sơ tình nguyện viên của khóa tu này cũng sẽ bị xóa vĩnh viễn.`)) {
       deleteRetreat(activeRetreat.id);
-      router.push("/");
+      router.push("/admin");
     }
   };
 

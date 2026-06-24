@@ -2,15 +2,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, Users, Upload, Settings, LogOut } from "lucide-react";
+import { Home, Users, Settings, LogOut } from "lucide-react";
 import { useVolunteerStore, startFirebaseSync, stopFirebaseSync, getEffectiveConfig } from "@/shared/lib/store";
-import { LoginPage } from "@/shared/components/LoginPage";
 
 const NAV = [
-  { href: "/",                   Icon: Home,            label: "Tổng Quan" },
-  { href: "/tinh-nguyen-vien",   Icon: Users,           label: "TNV" },
-  { href: "/import",             Icon: Upload,          label: "Import" },
-  { href: "/cai-dat",            Icon: Settings,        label: "Cài Đặt" },
+  { href: "/admin",                    Icon: Home,     label: "Trang Chủ" },
+  { href: "/admin/tinh-nguyen-vien",   Icon: Users,    label: "TNV" },
+  { href: "/admin/cai-dat",            Icon: Settings, label: "Cài Đặt" },
 ];
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
@@ -132,17 +130,13 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
 
   const handleSwitchRetreat = () => {
     setActiveRetreatId(null);
-    router.push("/");
+    router.push("/admin");
   };
 
   const isPrintRoute = pathname?.includes("/in-name-tags") || pathname?.includes("/bao-cao-tong-ket");
 
   if (!mounted) {
     return <div style={{ background: "var(--bg-base)", minHeight: "100vh" }} />;
-  }
-
-  if (!currentUser) {
-    return <LoginPage />;
   }
 
   if (isPrintRoute) {
@@ -163,7 +157,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         zIndex: 50,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link href="/" onClick={() => setActiveRetreatId(null)} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+          <Link href="/admin" onClick={() => setActiveRetreatId(null)} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 9, background: "var(--accent)",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -266,8 +260,8 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
         zIndex: 50,
       }}>
         {NAV.map(({ href, Icon, label }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
-          const isDisabled = !activeRetreatId && (href === "/tinh-nguyen-vien" || href === "/import");
+          const active = href === "/admin" ? (pathname === "/admin" || pathname === "/admin/") : pathname.startsWith(href);
+          const isDisabled = !activeRetreatId && href === "/admin/tinh-nguyen-vien";
 
           const content = (
             <>
