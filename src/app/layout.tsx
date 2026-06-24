@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   title: "TNV Manager – Quản Lý Tình Nguyện Viên",
   description: "Hệ thống quản lý tình nguyện viên cho khóa tu – Tu viện Vườn Ươm, Làng Mai Thái Lan",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "TNV Manager",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {

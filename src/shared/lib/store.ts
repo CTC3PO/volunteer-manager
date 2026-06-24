@@ -428,43 +428,112 @@ export const startFirebaseSync = (config: any) => {
 
   // Listen to retreats
   unsubRetreats = onSnapshot(collection(db, "retreats"), (snapshot) => {
-    const retreatsList: Retreat[] = [];
+    const remoteRetreats: Retreat[] = [];
     snapshot.forEach((doc) => {
-      retreatsList.push(doc.data() as Retreat);
+      remoteRetreats.push(doc.data() as Retreat);
     });
-    
-    const isInitial = isInitialRetreatsLoad;
-    isInitialRetreatsLoad = false;
-    
-    if (isInitial && snapshot.size === 0) {
-      // Firebase is empty, seed it with our local state so we don't lose it
-      const localRetreats = useVolunteerStore.getState().retreats;
-      localRetreats.forEach((r) => dbWriteRetreat(r, config));
-    } else {
-      useVolunteerStore.setState({ retreats: retreatsList });
+
+    const localRetreats = useVolunteerStore.getState().retreats;
+    const mergedRetreats = [...localRetreats];
+    let hasChanges = false;
+
+    // 1. Process remote retreats and merge/update
+    remoteRetreats.forEach((rr) => {
+      const idx = mergedRetreats.findIndex((lr) => lr.id === rr.id);
+      if (idx !== -1) {
+        const lr = mergedRetreats[idx];
+        const localTime = new Date(lr.ngayCapNhat || 0).getTime();
+        const remoteTime = new Date(rr.ngayCapNhat || 0).getTime();
+
+        if (remoteTime > localTime) {
+          // Remote is newer, update local
+          mergedRetreats[idx] = rr;
+          hasChanges = true;
+        } else if (localTime > remoteTime) {
+          // Local is newer, upload to Firestore
+          dbWriteRetreat(lr, config);
+        }
+      } else {
+        // Missing locally, add to local
+        mergedRetreats.push(rr);
+        hasChanges = true;
+      }
+    });
+
+    // 2. Process local-only retreats (upload them)
+    localRetreats.forEach((lr) => {
+      const existsRemote = remoteRetreats.some((rr) => rr.id === lr.id);
+      if (!existsRemote) {
+        dbWriteRetreat(lr, config);
+      }
+    });
+
+    // If local state needs an update, apply it
+    if (hasChanges || localRetreats.length !== mergedRetreats.length) {
+      useVolunteerStore.setState({ retreats: mergedRetreats });
     }
   });
 
   // Listen to volunteers
   unsubVolunteers = onSnapshot(collection(db, "volunteers"), (snapshot) => {
     const deletedIds = useVolunteerStore.getState().deletedVolunteerIds || [];
-    const volunteersList: Volunteer[] = [];
+    const remoteVolunteers: Volunteer[] = [];
     snapshot.forEach((doc) => {
-      const data = doc.data() as Volunteer;
-      if (!deletedIds.includes(data.id)) {
-        volunteersList.push(data);
+      remoteVolunteers.push(doc.data() as Volunteer);
+    });
+
+    const localVolunteers = useVolunteerStore.getState().volunteers;
+    const mergedVolunteers = [...localVolunteers];
+    let hasChanges = false;
+
+    // 1. Process remote volunteers and merge/update
+    remoteVolunteers.forEach((rv) => {
+      // If deleted locally, ensure it is deleted remotely
+      if (deletedIds.includes(rv.id)) {
+        dbDeleteVolunteer(rv.id, config);
+        return;
+      }
+
+      const idx = mergedVolunteers.findIndex((lv) => lv.id === rv.id);
+      if (idx !== -1) {
+        const lv = mergedVolunteers[idx];
+        const localTime = new Date(lv.ngayCapNhat || 0).getTime();
+        const remoteTime = new Date(rv.ngayCapNhat || 0).getTime();
+
+        if (remoteTime > localTime) {
+          // Remote is newer, update local
+          mergedVolunteers[idx] = rv;
+          hasChanges = true;
+        } else if (localTime > remoteTime) {
+          // Local is newer, upload to Firestore
+          dbWriteVolunteer(lv, config);
+        }
+      } else {
+        // Missing locally, add to local
+        mergedVolunteers.push(rv);
+        hasChanges = true;
       }
     });
-    
-    const isInitial = isInitialVolunteersLoad;
-    isInitialVolunteersLoad = false;
-    
-    if (isInitial && snapshot.size === 0) {
-      // Firebase is empty, seed it with our local state so we don't lose it
-      const localVolunteers = useVolunteerStore.getState().volunteers;
-      localVolunteers.forEach((v) => dbWriteVolunteer(v, config));
-    } else {
-      useVolunteerStore.setState({ volunteers: volunteersList });
+
+    // 2. Process local-only volunteers
+    localVolunteers.forEach((lv) => {
+      const existsRemote = remoteVolunteers.some((rv) => rv.id === lv.id);
+      if (!existsRemote) {
+        if (deletedIds.includes(lv.id)) {
+          // If deleted locally, delete from Firestore just in case
+          dbDeleteVolunteer(lv.id, config);
+        } else {
+          // Upload to Firestore
+          dbWriteVolunteer(lv, config);
+        }
+      }
+    });
+
+    // If local state needs an update, apply it
+    if (hasChanges || localVolunteers.length !== mergedVolunteers.length) {
+      // Filter out deleted volunteer IDs from local store just in case
+      const cleanedVolunteers = mergedVolunteers.filter((v) => !deletedIds.includes(v.id));
+      useVolunteerStore.setState({ volunteers: cleanedVolunteers });
     }
   });
 };

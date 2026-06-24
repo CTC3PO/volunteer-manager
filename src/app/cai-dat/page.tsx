@@ -220,6 +220,36 @@ export default function CaiDatPage() {
             </div>
           </div>
 
+          {/* 1.5. Offline App Installation (PWA) */}
+          <div className="card">
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
+              📱 Cài Đặt Ứng Dụng Ngoại Tuyến (PWA)
+            </h3>
+            <p style={{ fontSize: 12.5, color: "var(--text-muted)", marginBottom: 16 }}>
+              Ứng dụng này hỗ trợ cài đặt trực tiếp vào thiết bị của bạn (điện thoại hoặc máy tính) để sử dụng ngoại tuyến ngay cả khi không có kết nối mạng.
+            </p>
+            <div style={{ background: "var(--bg-secondary)", padding: 14, borderRadius: 8, fontSize: 13, borderLeft: "3px solid var(--accent)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <strong style={{ color: "var(--text-primary)" }}>🖥️ Trên Máy Tính (Chrome/Safari/Edge):</strong>
+                <p style={{ color: "var(--text-secondary)", fontSize: 12.5, marginTop: 4 }}>
+                  Nhấp vào biểu tượng <strong>Cài đặt (Install)</strong> ở góc phải thanh địa chỉ trình duyệt, hoặc mở menu trình duyệt và chọn <strong>Cài đặt ứng dụng</strong>.
+                </p>
+              </div>
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+                <strong style={{ color: "var(--text-primary)" }}>🍏 Trên Điện Thoại iPhone (Safari):</strong>
+                <p style={{ color: "var(--text-secondary)", fontSize: 12.5, marginTop: 4 }}>
+                  Mở ứng dụng bằng Safari, nhấn nút <strong>Chia sẻ (Share)</strong> ở thanh menu dưới cùng, cuộn xuống và chọn <strong>Thêm vào MH chính (Add to Home Screen)</strong>.
+                </p>
+              </div>
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+                <strong style={{ color: "var(--text-primary)" }}>🤖 Trên Điện Thoại Android (Chrome):</strong>
+                <p style={{ color: "var(--text-secondary)", fontSize: 12.5, marginTop: 4 }}>
+                  Nhấn vào nút menu 3 chấm đứng ở góc trên bên phải Chrome, chọn <strong>Cài đặt ứng dụng (Install app)</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* 2. Firebase Cloud Database Card */}
           <div className="card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>

@@ -63,6 +63,71 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
     return () => stopFirebaseSync();
   }, [firebaseConfig]);
 
+  // PWA Offline Install Prompt state & logic
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Check display mode
+    const isStandalone = 
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+
+    if (isStandalone) return;
+
+    // Detect iOS
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const ios = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(ios);
+
+    if (ios) {
+      const dismissed = sessionStorage.getItem("pwa-dismissed");
+      if (!dismissed) {
+        const timer = setTimeout(() => setShowInstallBanner(true), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      const dismissed = sessionStorage.getItem("pwa-dismissed");
+      if (!dismissed) {
+        setShowInstallBanner(true);
+      }
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+      alert("Để cài đặt trên iOS: Nhấn nút 'Chia sẻ' ở dưới cùng trình duyệt Safari, sau đó cuộn xuống chọn 'Thêm vào MH chính' (Add to Home Screen).");
+      setShowInstallBanner(false);
+      sessionStorage.setItem("pwa-dismissed", "true");
+      return;
+    }
+
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+    sessionStorage.setItem("pwa-dismissed", "true");
+  };
+
+  const handleDismissBanner = () => {
+    setShowInstallBanner(false);
+    sessionStorage.setItem("pwa-dismissed", "true");
+  };
+
   const activeRetreat = retreats.find((r) => r.id === activeRetreatId);
 
   const handleSwitchRetreat = () => {
@@ -264,6 +329,72 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
+
+      {/* PWA Install Banner */}
+      {showInstallBanner && (
+        <div style={{
+          position: "fixed",
+          bottom: 68, // above bottom nav + safety offset
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "calc(100% - 32px)",
+          maxWidth: 400,
+          background: "var(--bg-surface)",
+          border: "1.5px solid var(--accent)",
+          borderRadius: 12,
+          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+          padding: "12px 14px",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          animation: "fadeUp 0.3s ease",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>📲</span>
+            <div style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                Tải ứng dụng ngoại tuyến
+              </span>
+              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                Sử dụng offline & quản lý mượt mà hơn
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button 
+              onClick={handleInstallClick}
+              style={{
+                background: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 999,
+                padding: "6px 14px",
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              Cài đặt
+            </button>
+            <button 
+              onClick={handleDismissBanner}
+              style={{
+                background: "transparent",
+                color: "var(--text-muted)",
+                border: "none",
+                fontSize: 14,
+                cursor: "pointer",
+                padding: 4,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
